@@ -2,7 +2,7 @@ package com.worldcretornica.dungeonme.schematic;
 
 import java.util.List;
 
-public class Display {
+public class Display extends AbstractSchematicElement {
 
     private String name;
     private List<String> lore;
@@ -23,6 +23,8 @@ public class Display {
     
     public String toString()
     {
-    	return this.getClass().getName() + ": name=" + name + ", lore=" + lore.toString(); 
+    	return "{" + this.getClass().getName() + 
+    	        ": name=" + Sanitize(name) + 
+    	        ", lore=" + Sanitize(lore) + "}"; 
     }
 }

@@ -2,7 +2,7 @@ package com.worldcretornica.dungeonme.schematic;
 
 import java.util.List;
 
-public class Entity {
+public class Entity extends AbstractSchematicElement {
 
     private Byte dir;
     private Byte direction;
@@ -20,9 +20,9 @@ public class Entity {
     private String motive;
     private List<Double> motion;
     private List<Double> pos;
-    private List<Double> rotation;
+    private List<Float> rotation;
 
-    public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Double> rotation) {
+    public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Float> rotation) {
         this.dir = dir;
         this.direction = direction;
         this.invulnerable = invulnerable;
@@ -106,15 +106,29 @@ public class Entity {
         return pos;
     }
 
-    public List<Double> getRotation() {
+    public List<Float> getRotation() {
         return rotation;
     }
     
     public String toString()
     {
-    	return this.getClass().getName() + ": dir=" + dir + ", direction=" + direction + ", invulnerable=" + invulnerable +
-    			", onground=" + onground + ", air=" + air + ", fire=" + fire + ", dimension=" + dimension + ", portalcooldown=" + portalcooldown +
-    			", tilex=" + tilex + ", tiley=" + tiley + ", tilez=" + tilez + ", falldistance=" + falldistance + ", id=" + id +
-    			", motive=" + motive + ", motion=" + motion + ", pos=" + pos + ", rotation=" + rotation;
+    	return "{" + this.getClass().getName() + 
+    	        ": dir=" + Sanitize(dir) + 
+    	        ", direction=" + Sanitize(direction) + 
+    	        ", invulnerable=" + Sanitize(invulnerable) +
+    			", onground=" + Sanitize(onground) + 
+    			", air=" + Sanitize(air) + 
+    			", fire=" + Sanitize(fire) + 
+    			", dimension=" + Sanitize(dimension) + 
+    			", portalcooldown=" + Sanitize(portalcooldown) +
+    			", tilex=" + Sanitize(tilex) + 
+    			", tiley=" + Sanitize(tiley) + 
+    			", tilez=" + Sanitize(tilez) + 
+    			", falldistance=" + Sanitize(falldistance) + 
+    			", id=" + Sanitize(id) +
+    			", motive=" + Sanitize(motive) + 
+    			", motion=" + Sanitize(motion) + 
+    			", pos=" + Sanitize(pos) + 
+    			", rotation=" + Sanitize(rotation) + "}";
     }
 }

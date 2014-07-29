@@ -22,7 +22,9 @@ public class DungeonMe extends JavaPlugin {
     		
     		getLogger().info("Loading schematic...");
 			Schematic schem = SchematicUtil.loadSchematic(new File("C:\\Minecraft\\Schematic\\ZachBoraTest1.schematic"));
-			getLogger().info("Finished loading");
+			getLogger().info("Finished loading. Outputting :");
+			getLogger().info(schem.toString());
+			
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

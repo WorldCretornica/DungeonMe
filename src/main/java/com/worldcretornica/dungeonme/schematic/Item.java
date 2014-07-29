@@ -1,27 +1,48 @@
 package com.worldcretornica.dungeonme.schematic;
 
-import java.util.List;
-
-public class Item {
+public class Item extends AbstractSchematicElement {
 
     private Byte count;
     private Byte slot;
     private Short damage;
     private Short id;
-    private List<ItemTag> tags;
+    private ItemTag tag;
     
-    public Item(Byte count, Byte slot, Short damage, Short id, List<ItemTag> tags) {
+    public Item(Byte count, Byte slot, Short damage, Short id, ItemTag tag) {
         this.count = count;
         this.slot = slot;
         this.damage = damage;
         this.id = id;
-        this.tags = tags;
+        this.tag = tag;
     }
     
-    public Byte getCount() {return count;}
-    public Byte getSlot() {return slot;}
-    public Short getDamage() {return damage;}
-    public Short getId() {return id;}
-    public List<ItemTag> getTags() {return tags;}
+    public Byte getCount() {
+        return count;
+    }
+
+    public Byte getSlot() {
+        return slot;
+    }
+
+    public Short getDamage() {
+        return damage;
+    }
+
+    public Short getId() {
+        return id;
+    }
+
+    public ItemTag getTag() {
+        return tag;
+    }
     
+    public String toString() {
+        return "{" + this.getClass().getName() + 
+                ": count=" + Sanitize(count) + 
+                ", slot=" + Sanitize(slot) + 
+                ", damage=" + Sanitize(damage) + 
+                ", id=" + Sanitize(id) + 
+                ", tag=" + Sanitize(tag) + "}";
+        
+    }
 }

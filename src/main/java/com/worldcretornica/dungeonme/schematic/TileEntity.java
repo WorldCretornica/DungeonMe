@@ -2,7 +2,7 @@ package com.worldcretornica.dungeonme.schematic;
 
 import java.util.List;
 
-public class TileEntity {
+public class TileEntity extends AbstractSchematicElement {
 
     private Integer x;
     private Integer y;
@@ -11,8 +11,7 @@ public class TileEntity {
     private String id;
     private List<Item> items;
     
-    public TileEntity(Integer x, Integer y, Integer z, String customname, String id, List<Item> items)
-    {
+    public TileEntity(Integer x, Integer y, Integer z, String customname, String id, List<Item> items) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -20,34 +19,38 @@ public class TileEntity {
         this.id = id;
         this.items = items;
     }
-    
-    public Integer getX()
-    {
+
+    public Integer getX() {
         return x;
     }
-    
-    public Integer getY()
-    {
+
+    public Integer getY() {
         return y;
     }
-    
-    public Integer getZ()
-    {
+
+    public Integer getZ() {
         return z;
     }
-    
-    public String getCustomName()
-    {
+
+    public String getCustomName() {
         return customname;
     }
-    
-    public String getId()
-    {
+
+    public String getId() {
         return id;
     }
-    
-    public List<Item> getItems()
-    {
+
+    public List<Item> getItems() {
         return items;
+    }
+    
+    public String toString() {
+        return "{" + this.getClass().getName() + 
+                ": x=" + Sanitize(x) +
+                ", y=" + Sanitize(y) +
+                ", z=" + Sanitize(z) +
+                ", customname=" + Sanitize(customname) +
+                ", id=" + Sanitize(id) +
+                ", items=" + Sanitize(items) + "}";
     }
 }

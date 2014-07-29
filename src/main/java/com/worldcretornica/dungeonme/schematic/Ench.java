@@ -1,6 +1,6 @@
 package com.worldcretornica.dungeonme.schematic;
 
-public class Ench {
+public class Ench extends AbstractSchematicElement {
 
     private Short id;
     private Short lvl;
@@ -20,6 +20,8 @@ public class Ench {
     
     public String toString()
     {
-    	return this.getClass().getName() + ": id=" + id + ", lvl=" + lvl;
+    	return "{" + this.getClass().getName() + 
+    	        ": id=" + Sanitize(id) + 
+    	        ", lvl=" + Sanitize(lvl) + "}";
     }
 }

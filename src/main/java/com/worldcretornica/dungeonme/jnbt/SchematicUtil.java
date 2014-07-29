@@ -100,9 +100,9 @@ public class SchematicUtil {
                         Float falldistance = getChildTag(entity, "FallDistance", FloatTag.class, Float.class);
                         String id = getChildTag(entity, "id", StringTag.class, String.class);
                         String motive = getChildTag(entity, "Motive", StringTag.class, String.class);
-                        List<Double> motion = convert(getChildTag(schematic, "Motion", ListTag.class, List.class), Double.class);
-                        List<Double> pos = convert(getChildTag(schematic, "Pos", ListTag.class, List.class), Double.class);
-                        List<Double> rotation = convert(getChildTag(schematic, "Rotation", ListTag.class, List.class), Double.class);
+                        List<Double> motion = convert(getChildTag(entity, "Motion", ListTag.class, List.class), Double.class);
+                        List<Double> pos = convert(getChildTag(entity, "Pos", ListTag.class, List.class), Double.class);
+                        List<Float> rotation = convert(getChildTag(entity, "Rotation", ListTag.class, List.class), Float.class);
                         
                         entities.add(new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation));
                     }
@@ -116,7 +116,7 @@ public class SchematicUtil {
             {
                 tileentities = new ArrayList<TileEntity>();
                 
-                for(Object entityElement : entitiesList)
+                for(Object entityElement : tileentitiesList)
                 {
                     if(entityElement instanceof CompoundTag)
                     {
@@ -128,7 +128,7 @@ public class SchematicUtil {
                         String id = getChildTag(tileentity, "id", StringTag.class, String.class);
                         List<Item> items = getItems(tileentity);
                         
-                        tileentities.add(new TileEntity(x,y,z,customname,id,items));
+                        tileentities.add(new TileEntity(x, y, z, customname, id, items));
                     }
                 }
             }
@@ -155,13 +155,25 @@ public class SchematicUtil {
         }
         Tag tag = items.get(key);
         if (!expected.isInstance(tag)) {
-            return null;
+            throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName());
         }
         Object obj = expected.cast(tag).getValue();
         if (!result.isInstance(obj)) {
             return null;
         }
         return result.cast(obj);
+    }
+    
+    private static <T extends Tag> T getChildTag(Map<String, Tag> items, String key, Class<T> expected)
+    {
+        if (!items.containsKey(key)) {
+            return null;
+        }
+        Tag tag = items.get(key);
+        if (!expected.isInstance(tag)) {
+            throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName());
+        }
+        return expected.cast(tag);
     }
     
     private static <T> T convert(Object obj, Class<T> expected)
@@ -214,9 +226,9 @@ public class SchematicUtil {
                     Short damage = getChildTag(item, "Damage", ShortTag.class, Short.class);
                     Short itemid = getChildTag(item, "id", ShortTag.class, Short.class);
                     
-                    List<ItemTag> tags = getItemTags(item);
+                    ItemTag tag = getItemTag(item);
                     
-                    items.add(new Item(count, slot, damage, itemid, tags));
+                    items.add(new Item(count, slot, damage, itemid, tag));
                 }
             }
             
@@ -226,31 +238,21 @@ public class SchematicUtil {
         }
     }
     
-    private static List<ItemTag> getItemTags(Map<String, Tag> item)
+    private static ItemTag getItemTag(Map<String, Tag> item)
     {
-        List<?> itemtagsList = getChildTag(item, "tag", ListTag.class, List.class);
+        CompoundTag itemtagElement = getChildTag(item, "tag", CompoundTag.class);
         
-        if(itemtagsList != null)
+        if(itemtagElement != null)
         {
-            List<ItemTag> itemtags = new ArrayList<ItemTag>();
-            
-            for(Object itemtagElement : itemtagsList)
-            {
-                if(itemtagElement instanceof CompoundTag)
-                {
-                    Map<String, Tag> itemtag = ((CompoundTag) itemtagElement).getValue();
-                    Integer repaircost = getChildTag(item, "RepairCost", IntTag.class, Integer.class);
-                    String author = getChildTag(item, "Author", StringTag.class, String.class);
-                    String title = getChildTag(item, "Title", StringTag.class, String.class);
-                    List<String> pages = convert(getChildTag(item, "Title", ListTag.class, List.class), String.class);
-                    List<Display> display = getDisplay(itemtag);
-                    List<Ench> enchants = getEnchant(itemtag);
+            Map<String, Tag> itemtag = itemtagElement.getValue();
+            Integer repaircost = getChildTag(itemtag, "RepairCost", IntTag.class, Integer.class);
+            String author = getChildTag(itemtag, "Author", StringTag.class, String.class);
+            String title = getChildTag(itemtag, "Title", StringTag.class, String.class);
+            List<String> pages = convert(getChildTag(itemtag, "pages", ListTag.class, List.class), String.class);
+            Display display = getDisplay(itemtag);
+            List<Ench> enchants = getEnchant(itemtag);
                     
-                    itemtags.add(new ItemTag(repaircost, enchants, display, author, title, pages));
-                }
-            }
-            
-            return itemtags;
+            return new ItemTag(repaircost, enchants, display, author, title, pages);
         }
         else
         {
@@ -258,27 +260,17 @@ public class SchematicUtil {
         }
     }
     
-    private static List<Display> getDisplay(Map<String, Tag> itemtag)
+    private static Display getDisplay(Map<String, Tag> itemtag)
     {
-        List<?> displayList = getChildTag(itemtag, "display", ListTag.class, List.class);
+        CompoundTag displayElement = getChildTag(itemtag, "display", CompoundTag.class);
         
-        if(displayList != null)
+        if(displayElement != null)
         {
-            List<Display> displays = new ArrayList<Display>();
+    		Map<String, Tag> display = displayElement.getValue();
+    		String name = getChildTag(display, "Name", StringTag.class, String.class);
+    		List<String> lore = convert(getChildTag(display, "Lore", ListTag.class, List.class), String.class);
             
-            for(Object displayelement : displayList)
-            {
-            	if(displayelement instanceof CompoundTag)
-            	{
-            		Map<String, Tag> display = ((CompoundTag) displayelement).getValue();
-            		String name = getChildTag(display, "name", StringTag.class, String.class);
-            		List<String> lore = convert(getChildTag(display, "Lote", ListTag.class, List.class), String.class);
-            		
-            		displays.add(new Display(name, lore));
-            	}
-            }
-            
-            return displays;
+            return new Display(name, lore);
         }
         else
         {
@@ -286,9 +278,9 @@ public class SchematicUtil {
         }
     }
 
-    private static List<Ench> getEnchant(Map<String, Tag> itemtag)
+    private static List<Ench> getEnchant(Map<String, Tag> enchanttag)
     {
-    	List<?> enchantList = getChildTag(itemtag, "display", ListTag.class, List.class);
+    	List<?> enchantList = getChildTag(enchanttag, "ench", ListTag.class, List.class);
         
         if(enchantList != null)
         {
