@@ -20,4 +20,9 @@ public class Display {
     public List<String> getLore() {
         return lore;
     }
+    
+    public String toString()
+    {
+    	return this.getClass().getName() + ": name=" + name + ", lore=" + lore.toString(); 
+    }
 }

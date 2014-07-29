@@ -109,4 +109,12 @@ public class Entity {
     public List<Double> getRotation() {
         return rotation;
     }
+    
+    public String toString()
+    {
+    	return this.getClass().getName() + ": dir=" + dir + ", direction=" + direction + ", invulnerable=" + invulnerable +
+    			", onground=" + onground + ", air=" + air + ", fire=" + fire + ", dimension=" + dimension + ", portalcooldown=" + portalcooldown +
+    			", tilex=" + tilex + ", tiley=" + tiley + ", tilez=" + tilez + ", falldistance=" + falldistance + ", id=" + id +
+    			", motive=" + motive + ", motion=" + motion + ", pos=" + pos + ", rotation=" + rotation;
+    }
 }

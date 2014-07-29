@@ -17,4 +17,9 @@ public class Ench {
     public Short getLvl() {
         return lvl;
     }
+    
+    public String toString()
+    {
+    	return this.getClass().getName() + ": id=" + id + ", lvl=" + lvl;
+    }
 }
