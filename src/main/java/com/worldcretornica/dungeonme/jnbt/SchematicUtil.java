@@ -148,7 +148,7 @@ public class SchematicUtil {
     * @throws DataException if the tag does not exist or the tag is not of the
     * expected type
     */
-    private static <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result) throws IllegalArgumentException
+    private static <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result)
     {
         if (!items.containsKey(key)) {
             return null;
@@ -244,7 +244,7 @@ public class SchematicUtil {
                     String title = getChildTag(item, "Title", StringTag.class, String.class);
                     List<String> pages = convert(getChildTag(item, "Title", ListTag.class, List.class), String.class);
                     List<Display> display = getDisplay(itemtag);
-                    List<Ench> enchants;
+                    List<Ench> enchants = getEnchant(itemtag);
                     
                     itemtags.add(new ItemTag(repaircost, enchants, display, author, title, pages));
                 }
@@ -264,9 +264,49 @@ public class SchematicUtil {
         
         if(displayList != null)
         {
+            List<Display> displays = new ArrayList<Display>();
             
+            for(Object displayelement : displayList)
+            {
+            	if(displayelement instanceof CompoundTag)
+            	{
+            		Map<String, Tag> display = ((CompoundTag) displayelement).getValue();
+            		String name = getChildTag(display, "name", StringTag.class, String.class);
+            		List<String> lore = convert(getChildTag(display, "Lote", ListTag.class, List.class), String.class);
+            		
+            		displays.add(new Display(name, lore));
+            	}
+            }
             
-            return new Display(name, lore);
+            return displays;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private static List<Ench> getEnchant(Map<String, Tag> itemtag)
+    {
+    	List<?> enchantList = getChildTag(itemtag, "display", ListTag.class, List.class);
+        
+        if(enchantList != null)
+        {
+            List<Ench> enchants = new ArrayList<Ench>();
+            
+            for(Object enchantelement : enchantList)
+            {
+            	if(enchantelement instanceof CompoundTag)
+            	{
+            		Map<String, Tag> enchant = ((CompoundTag) enchantelement).getValue();
+            		Short id = getChildTag(enchant, "id", ShortTag.class, Short.class);
+            	    Short lvl = getChildTag(enchant, "lvl", ShortTag.class, Short.class);
+            		
+            		enchants.add(new Ench(id, lvl));
+            	}
+            }
+            
+            return enchants;
         }
         else
         {
