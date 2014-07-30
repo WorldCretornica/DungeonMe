@@ -46,7 +46,7 @@ public class Schematic extends AbstractSchematicElement {
         return width;
     }
 
-    public Short getLenght() {
+    public Short getLength() {
         return length;
     }
 

@@ -28,7 +28,7 @@ public class SchematicUtil {
         byte[] blocks = schematic.getBlocks();
         byte[] blockData = schematic.getData();
  
-        Short length = schematic.getLenght();
+        Short length = schematic.getLength();
         Short width = schematic.getWidth();
         Short height = schematic.getHeight();
  

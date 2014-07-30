@@ -2,5 +2,6 @@ name: DungeonMe
 main: com.worldcretornica.dungeonme.DungeonMe
 version: ${project.version}
 author: ZachBora
+load: startup
 description: >
              Infinite Dungeon Generator
