@@ -1,5 +1,7 @@
 package com.worldcretornica.dungeonme;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,10 +23,14 @@ public class DungeonMe extends JavaPlugin {
 			
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
     	
+        for(World w : Bukkit.getWorlds()) {
+            if(w.getGenerator() instanceof DungeonGenerator) {
+                w.setSpawnLocation(8, 65, 8);
+            }
+        }
     }
 
     @Override
