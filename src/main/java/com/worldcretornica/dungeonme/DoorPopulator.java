@@ -23,7 +23,7 @@ public class DoorPopulator extends BlockPopulator {
                 
         for (int roomy = 0; roomy <= (maxY / 8); roomy++) 
         {
-            int yy = roomy << 4;
+            int yy = roomy << 3;
             int chance = 0;
 
             // Doors

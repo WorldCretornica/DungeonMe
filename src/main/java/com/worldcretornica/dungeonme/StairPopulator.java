@@ -25,7 +25,7 @@ public class StairPopulator extends BlockPopulator {
                 
         for (int roomy = 0; roomy < (maxY / 8); roomy++) 
         {
-            yy = roomy << 4;
+            yy = roomy << 3;
 
             // Stairs
             //No stairs in the top most room
@@ -48,8 +48,14 @@ public class StairPopulator extends BlockPopulator {
                         }                       
                         
                         setBlock(w, xx + 7, yy + 8, zz + 1, (byte) 5, 109);
+                        setBlock(w, xx + 8, yy + 8, zz + 1, (byte) 0, 0);
+                        setBlock(w, xx + 9, yy + 8, zz + 1, (byte) 0, 0);
+                        setBlock(w, xx + 10, yy + 8, zz + 1, (byte) 0, 0);
+                        
                         setBlock(w, xx + 6, yy + 7, zz + 1, (byte) 5, 109);
                         setBlock(w, xx + 7, yy + 7, zz + 1, (byte) 0, 0);
+                        setBlock(w, xx + 8, yy + 7, zz + 1, (byte) 0, 0);
+                        setBlock(w, xx + 9, yy + 7, zz + 1, (byte) 0, 0);
                         
                         break;
                     case 2:
@@ -58,13 +64,19 @@ public class StairPopulator extends BlockPopulator {
                             setBlock(w, xx + 12 - c, yy + c, zz + 14, (byte) 1, 109);
                             
                             if(c <= 6) {
-                                setBlock(w, xx + 11 + c, yy + c, zz + 14, (byte) 4, 109);
+                                setBlock(w, xx + 11 - c, yy + c, zz + 14, (byte) 4, 109);
                             }
                         }
 
-                        setBlock(w, xx + 8, yy + 8, zz + 14, (byte) 4, 109);
                         setBlock(w, xx + 9, yy + 7, zz + 14, (byte) 4, 109);
                         setBlock(w, xx + 8, yy + 7, zz + 14, (byte) 0, 0);
+                        setBlock(w, xx + 7, yy + 7, zz + 14, (byte) 0, 0);
+                        setBlock(w, xx + 6, yy + 7, zz + 14, (byte) 0, 0);
+                        
+                        setBlock(w, xx + 8, yy + 8, zz + 14, (byte) 4, 109);
+                        setBlock(w, xx + 7, yy + 8, zz + 14, (byte) 0, 0);
+                        setBlock(w, xx + 6, yy + 8, zz + 14, (byte) 0, 0);
+                        setBlock(w, xx + 5, yy + 8, zz + 14, (byte) 0, 0);
                         
                         break;
                     case 3:
@@ -77,24 +89,36 @@ public class StairPopulator extends BlockPopulator {
                             }
                         }                       
                         
-                        setBlock(w, xx + 1, yy + 8, zz + 7, (byte) 6, 109);
-                        setBlock(w, xx + 1, yy + 7, zz + 6, (byte) 6, 109);
+                        setBlock(w, xx + 1, yy + 7, zz + 9, (byte) 6, 109);
+                        setBlock(w, xx + 1, yy + 7, zz + 8, (byte) 0, 0);
                         setBlock(w, xx + 1, yy + 7, zz + 7, (byte) 0, 0);
+                        setBlock(w, xx + 1, yy + 7, zz + 6, (byte) 0, 0);
+                        
+                        setBlock(w, xx + 1, yy + 8, zz + 8, (byte) 6, 109);
+                        setBlock(w, xx + 1, yy + 8, zz + 7, (byte) 0, 0);
+                        setBlock(w, xx + 1, yy + 8, zz + 6, (byte) 0, 0);
+                        setBlock(w, xx + 1, yy + 8, zz + 5, (byte) 0, 0);
                         
                         break;
                     case 4:
                         // topX
                         for(int c = 1; c <= 8; c++) {
-                            setBlock(w, xx + 14, yy + c, zz + 14 - c, (byte) 2, 109);
+                            setBlock(w, xx + 14, yy + c, zz + 3 + c, (byte) 2, 109);
                             
                             if(c <= 6) {
-                                setBlock(w, xx + 14, yy + c, zz + 13 - c, (byte) 7, 109);
+                                setBlock(w, xx + 14, yy + c, zz + 4 + c, (byte) 7, 109);
                             }
                         }
 
-                        setBlock(w, xx + 14, yy + 8, zz + 8, (byte) 7, 109);
-                        setBlock(w, xx + 14, yy + 7, zz + 9, (byte) 7, 109);
+                        setBlock(w, xx + 14, yy + 8, zz + 7, (byte) 7, 109);
+                        setBlock(w, xx + 14, yy + 8, zz + 8, (byte) 0, 0);
+                        setBlock(w, xx + 14, yy + 8, zz + 9, (byte) 0, 0);
+                        setBlock(w, xx + 14, yy + 8, zz + 10, (byte) 0, 0);
+                        
+                        setBlock(w, xx + 14, yy + 7, zz + 6, (byte) 7, 109);
+                        setBlock(w, xx + 14, yy + 7, zz + 7, (byte) 0, 0);
                         setBlock(w, xx + 14, yy + 7, zz + 8, (byte) 0, 0);
+                        setBlock(w, xx + 14, yy + 7, zz + 9, (byte) 0, 0);
                         
                         break;
                     }
