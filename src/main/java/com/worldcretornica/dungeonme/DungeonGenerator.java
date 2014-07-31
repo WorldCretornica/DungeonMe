@@ -15,7 +15,7 @@ public class DungeonGenerator extends ChunkGenerator {
     public byte[][] generateBlockSections(World w, Random r, int cx, int cz, BiomeGrid b) {
         final int maxY = w.getMaxHeight();
         
-        byte[][] result = new byte[maxY / 16][];
+        byte[][] result = new byte[maxY << 4][];
         
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
