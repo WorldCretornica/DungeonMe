@@ -23,17 +23,17 @@ public class StairPopulator extends BlockPopulator {
         int maxY = w.getMaxHeight();
         int chance;
                 
-        for (int roomy = 0; roomy < (maxY / 8); roomy++) 
+        for (int roomy = 0; roomy < (maxY >> 3); roomy++) 
         {
             yy = roomy << 3;
 
             // Stairs
             //No stairs in the top most room
-            if(roomy < (maxY/8 - 1)) {
+            if(roomy < (maxY << 3 - 1)) {
                 // Chance of stairs in this room
                 chance = new Random(seed ^ (roomx << 32) ^ (roomy << 16) ^ roomz).nextInt(100) + 1;
                 
-                if (chance >= 35) {
+                if (chance >= 85) {
                     chance = new Random(seed ^ (roomx << 32) ^ (roomy << 16) ^ roomz).nextInt(4) + 1;
                     
                     switch (chance) {
