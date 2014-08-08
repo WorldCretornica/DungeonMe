@@ -17,7 +17,7 @@ public class DungeonGenerator extends ChunkGenerator {
         
         byte[][] result = new byte[maxY << 4][];
         
-        for (int x = 0; x < 16; x++) {
+        /*for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 for (int y = 0; y < maxY; y++) {
                     if ((y + 1) % 8 == 1 || (y + 1) % 8 == 0 || x == 0 || x == 15 || z == 0 || z == 15) {
@@ -25,6 +25,30 @@ public class DungeonGenerator extends ChunkGenerator {
                     }
                 }
             }
+        }*/
+        
+        
+        for (int x = 0; x < 16; x++) {
+        	for (int y = 0; y < maxY; y++) {
+        		setBlock(result, x, y, 0, (byte) 98);
+        		setBlock(result, x, y, 15, (byte) 98);
+        	}        	
+        }
+        
+        for (int z = 1; z < 15; z++) {
+        	for (int y = 0; y < maxY; y++) {
+        		setBlock(result, 0, y, z, (byte) 98);
+        		setBlock(result, 15, y, z, (byte) 98);
+        	}
+        }
+        
+        for (int y = 0; y < maxY; y += 8) {
+        	for (int x = 1; x < 15; x++) {
+        		for (int z = 1; z < 15; z++) {
+        			setBlock(result, x, y, z, (byte) 98);
+        			setBlock(result, x, y + 7, z, (byte) 98);
+        		}
+        	}
         }
         
         return result;
