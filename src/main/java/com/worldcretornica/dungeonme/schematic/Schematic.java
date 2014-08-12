@@ -1,13 +1,12 @@
 package com.worldcretornica.dungeonme.schematic;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class Schematic extends AbstractSchematicElement implements Serializable {
+public class Schematic extends AbstractSchematicElement {
  
     private static final long serialVersionUID = 8966082365181590943L;
     
-    private byte[] blocks;
+    private int[] blocks;
     private byte[] data;
     private byte[] biomes;
     private String materials;
@@ -19,7 +18,7 @@ public class Schematic extends AbstractSchematicElement implements Serializable 
     private String roomauthor;
     private Long checksum;
  
-    public Schematic(byte[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum) {
+    public Schematic(int[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum) {
         this.blocks = blocks;
         this.data = data;
         this.biomes = biomes;
@@ -33,7 +32,7 @@ public class Schematic extends AbstractSchematicElement implements Serializable 
         this.checksum = checksum;
     }
 
-    public byte[] getBlocks() {
+    public int[] getBlocks() {
         return blocks;
     }
 

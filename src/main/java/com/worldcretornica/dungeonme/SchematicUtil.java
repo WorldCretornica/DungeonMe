@@ -21,8 +21,12 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.BrewingStand;
+import org.bukkit.block.CommandBlock;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.block.Furnace;
+import org.bukkit.block.Jukebox;
+import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.EntityType;
@@ -80,7 +84,7 @@ public class SchematicUtil {
     @SuppressWarnings("deprecation")
     public void pasteSchematic(Location loc, Schematic schematic) {
         World world = loc.getWorld();
-        byte[] blocks = schematic.getBlocks();
+        int[] blocks = schematic.getBlocks();
         byte[] blockData = schematic.getData();
 
         Short length = schematic.getLength();
@@ -96,22 +100,10 @@ public class SchematicUtil {
                     Block block = new Location(world, x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ()).getBlock();
                     
                     try {
-                        int blockid = blocks[index];
-                        if(blockid < 0) 
-                            blockid = 256 + blockid;
-                        
-                        block.setTypeIdAndData(blockid, blockData[index], false);
+                        block.setTypeIdAndData(blocks[index], blockData[index], false);
+                        block.setData(blockData[index], false);
                     } catch (NullPointerException e) {
                         plugin.getLogger().info("Error pasting block : " + blocks[index] + " of data " + blockData[index]);
-                        block.setTypeIdAndData(Material.SPONGE.getId(), blockData[index], false);
-                        
-                        /*
-                         * 
-                         * wrong direction
-                         * chests
-                         * 
-                         * library has no tnt
-                         */
                     }
                 }
             }
@@ -122,77 +114,141 @@ public class SchematicUtil {
                 EntityType et = EntityType.fromName(e.getId());
 
                 if (et != null) {
-                    // world.spawnEntity(new Location(world, e.getTileX() +
-                    // loc.getX(), e.getTileY() + loc.getY(), e.getTileZ() +
-                    // loc.getZ()), et);
+                    //TODO
+                    //world.spawnEntity(new Location(world, e.getTileX() + loc.getX(), e.getTileY() + loc.getY(), e.getTileZ() + loc.getZ()), et);
                 }
             }
         } catch (Exception e) {
             plugin.getLogger().warning("err:" + e.getMessage());
         }
 
+        
         for (TileEntity te : tileentities) {
 
             Location teloc = new Location(world, te.getX() + loc.getBlockX(), te.getY() + loc.getBlockY(), te.getZ() + loc.getBlockZ());
 
             Block block = teloc.getBlock();
             List<Item> items = te.getItems();
-            
-            Byte rot = te.getRot();
-            Byte skulltype = te.getSkullType();
-            Short delay = te.getDelay();
-            //Short maxnearbyentities = te.getMaxNearbyEntities();
-            //Short maxspawndelay = te.getMaxSpawnDelay();
-            //Short minspawndelay = te.getMinSpawnDelay();
-            //Short requiredplayerrange = te.getRequiredPlayerRange();
-            //Short spawncount = te.getSpawnCount();
-            //Short spawnrange = te.getSpawnRange();
-            String entityid = te.getEntityId();
-            Short burntime = te.getBurnTime();
-            Short cooktime = te.getCookTime();
-            //String customname = te.getCustomName();
-            String text1 = te.getText1();
-            String text2 = te.getText2();
-            String text3 = te.getText3();
-            String text4 = te.getText4();
-            
+
+            // Short maxnearbyentities = te.getMaxNearbyEntities();
+            // Short maxspawndelay = te.getMaxSpawnDelay();
+            // Short minspawndelay = te.getMinSpawnDelay();
+            // Short requiredplayerrange = te.getRequiredPlayerRange();
+            // Short spawncount = te.getSpawnCount();
+            // Short spawnrange = te.getSpawnRange();
+            // String customname = te.getCustomName();
+
             BlockState bs = block.getState();
 
             if (bs instanceof Skull) {
                 Skull skull = (Skull) bs;
-                skull.setRotation(BlockFace.values()[rot]);
-                skull.setSkullType(SkullType.values()[skulltype]);
+
+                BlockFace bf = null;
+                switch (te.getRot()) {
+                case 0:
+                    bf = BlockFace.NORTH;
+                    break;
+                case 1:
+                    bf = BlockFace.NORTH_NORTH_EAST;
+                    break;
+                case 2:
+                    bf = BlockFace.NORTH_EAST;
+                    break;
+                case 3:
+                    bf = BlockFace.EAST_NORTH_EAST;
+                    break;
+                case 4:
+                    bf = BlockFace.EAST;
+                    break;
+                case 5:
+                    bf = BlockFace.EAST_SOUTH_EAST;
+                    break;
+                case 6:
+                    bf = BlockFace.SOUTH_EAST;
+                    break;
+                case 7:
+                    bf = BlockFace.SOUTH_SOUTH_EAST;
+                    break;
+                case 8:
+                    bf = BlockFace.SOUTH;
+                    break;
+                case 9:
+                    bf = BlockFace.SOUTH_SOUTH_WEST;
+                    break;
+                case 10:
+                    bf = BlockFace.SOUTH_WEST;
+                    break;
+                case 11:
+                    bf = BlockFace.WEST_SOUTH_WEST;
+                    break;
+                case 12:
+                    bf = BlockFace.WEST;
+                    break;
+                case 13:
+                    bf = BlockFace.WEST_NORTH_WEST;
+                    break;
+                case 14:
+                    bf = BlockFace.NORTH_WEST;
+                    break;
+                case 15:
+                    bf = BlockFace.NORTH_NORTH_WEST;
+                    break;
+                }
+
+                skull.setSkullType(SkullType.values()[te.getSkullType()]);
+                skull.setRotation(bf);
                 skull.update(true, false);
             }
             
             if (bs instanceof CreatureSpawner) {
                 CreatureSpawner spawner = (CreatureSpawner) bs;
-                spawner.setCreatureTypeByName(entityid);
-                spawner.setDelay(delay);
+                spawner.setCreatureTypeByName(te.getEntityId());
+                spawner.setDelay(te.getDelay());
                 spawner.update(true, false);
             }
             
             if (bs instanceof Furnace) {
                 Furnace furnace = (Furnace) bs;
-                furnace.setBurnTime(burntime);
-                furnace.setCookTime(cooktime);
+                furnace.setBurnTime(te.getBurnTime());
+                furnace.setCookTime(te.getCookTime());
                 furnace.update(true, false);
             }
-            
+
             if (bs instanceof Sign) {
                 Sign sign = (Sign) bs;
-                sign.setLine(0, text1);
-                sign.setLine(1, text2);
-                sign.setLine(2, text3);
-                sign.setLine(3, text4);
+                sign.setLine(0, te.getText1());
+                sign.setLine(1, te.getText2());
+                sign.setLine(2, te.getText3());
+                sign.setLine(3, te.getText4());
                 sign.update(true, false);
             }
-            
-            //TODO
-            //brewing stand, commandblock, jukebox, noteblock
-            
-            if (bs instanceof InventoryHolder && items != null && items.size() > 0) {
 
+            if (bs instanceof CommandBlock) {
+                CommandBlock cb = (CommandBlock) bs;
+                cb.setCommand(te.getCommand());
+                cb.update(true, false);
+            }
+
+            if (bs instanceof BrewingStand) {
+                BrewingStand brew = (BrewingStand) bs;
+                brew.setBrewingTime(te.getBrewTime());
+                brew.update(true, false);
+            }
+
+            if (bs instanceof Jukebox) {
+                Jukebox jb = (Jukebox) bs;
+                jb.setPlaying(Material.getMaterial(te.getRecord()));
+                jb.update(true, false);
+            }
+
+            if (bs instanceof NoteBlock) {
+                NoteBlock nb = (NoteBlock) bs;
+                nb.setRawNote(te.getNote());
+                nb.update(true, false);
+            }
+
+            if (bs instanceof InventoryHolder && items != null && items.size() > 0) {
+                
                 InventoryHolder ih = (InventoryHolder) bs;
                 Inventory inventory = ih.getInventory();
 
@@ -339,7 +395,19 @@ public class SchematicUtil {
                     throw new IllegalArgumentException("Schematic file is not an Alpha schematic");
                 }
 
-                byte[] blocks = getChildTag(schematic, "Blocks", ByteArrayTag.class, byte[].class);
+                byte[] rawblocks = getChildTag(schematic, "Blocks", ByteArrayTag.class, byte[].class);
+                int[] blocks = new int[rawblocks.length];
+                
+                for(int ctr = 0; ctr < rawblocks.length; ctr++) {
+                    int blockid = rawblocks[ctr];
+                    
+                    if(blockid < 0) 
+                        blockid = 256 + blockid;
+                    
+                    blocks[ctr] = blockid;
+                }
+                
+                
                 byte[] blockData = getChildTag(schematic, "Data", ByteArrayTag.class, byte[].class);
                 byte[] blockBiomes = getChildTag(schematic, "Biomes", ByteArrayTag.class, byte[].class);
 
@@ -373,7 +441,28 @@ public class SchematicUtil {
                             List<Double> pos = convert(getChildTag(entity, "Pos", ListTag.class, List.class), Double.class);
                             List<Float> rotation = convert(getChildTag(entity, "Rotation", ListTag.class, List.class), Float.class);
 
-                            entities.add(new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation));
+                            Byte canpickuploot = getChildTag(entity, "CanPickUpLoot", ByteTag.class, Byte.class);
+                            Byte color = getChildTag(entity, "Color", ByteTag.class, Byte.class);
+                            Byte customnamevisible = getChildTag(entity, "CustomNameVisible", ByteTag.class, Byte.class);
+                            Byte leashed = getChildTag(entity, "Leashed", ByteTag.class, Byte.class);
+                            Byte persistencerequired = getChildTag(entity, "PersistenceRequired", ByteTag.class, Byte.class);
+                            Byte sheared = getChildTag(entity, "Sheared", ByteTag.class, Byte.class);
+                            Short attacktime = getChildTag(entity, "AttachTime", ShortTag.class, Short.class);
+                            Short deathtime = getChildTag(entity, "DeathTime", ShortTag.class, Short.class);
+                            Short health = getChildTag(entity, "Health", ShortTag.class, Short.class);
+                            Short hurttime = getChildTag(entity, "HurtTime", ShortTag.class, Short.class);
+                            Integer age = getChildTag(entity, "Age", IntTag.class, Integer.class);
+                            Integer inlove = getChildTag(entity, "InLove", IntTag.class, Integer.class);
+                            Float absorptionamount= getChildTag(entity, "AbsorptionAmount", FloatTag.class, Float.class);
+                            Float healf= getChildTag(entity, "HealF", FloatTag.class, Float.class);
+                            String customname = getChildTag(entity, "CustomName", StringTag.class, String.class);
+                            List<Attribute> attributes = getAttributes(entity);
+                            List<Float> dropchances = convert(getChildTag(entity, "DropChances", ListTag.class, List.class), Float.class);
+                            List<Equipment> equipments = getEquipment(entity);
+                                                       
+                            entities.add(new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
+                                    canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
+                                    healf, customname, attributes, dropchances, equipments));
                         }
                     }
                 }
@@ -396,6 +485,7 @@ public class SchematicUtil {
 
                             Byte rot = getChildTag(tileentity, "Rot", ByteTag.class, Byte.class);
                             Byte skulltype = getChildTag(tileentity, "SkullType", ByteTag.class, Byte.class);
+                            
                             Short delay = getChildTag(tileentity, "Delay", ShortTag.class, Short.class);
                             Short maxnearbyentities = getChildTag(tileentity, "MaxNearbyEntities", ShortTag.class, Short.class);
                             Short maxspawndelay = getChildTag(tileentity, "MaxSpawnDelay", ShortTag.class, Short.class);
@@ -404,14 +494,31 @@ public class SchematicUtil {
                             Short spawncount = getChildTag(tileentity, "SpawnCount", ShortTag.class, Short.class);
                             Short spawnrange = getChildTag(tileentity, "SpawnRange", ShortTag.class, Short.class);
                             String entityid = getChildTag(tileentity, "EntityId", StringTag.class, String.class);
+
                             Short burntime = getChildTag(tileentity, "BurnTime", ShortTag.class, Short.class);
                             Short cooktime = getChildTag(tileentity, "CookTime", ShortTag.class, Short.class);
+
                             String text1 = getChildTag(tileentity, "Text1", StringTag.class, String.class);
                             String text2 = getChildTag(tileentity, "Text2", StringTag.class, String.class);
                             String text3 = getChildTag(tileentity, "Text3", StringTag.class, String.class);
                             String text4 = getChildTag(tileentity, "Text4", StringTag.class, String.class);
-                            
-                            tileentities.add(new TileEntity(x, y, z, customname, id, items, rot, skulltype, delay, maxnearbyentities, maxspawndelay, minspawndelay, requiredplayerrange, spawncount, spawnrange, entityid, burntime, cooktime, text1, text2, text3, text4));
+
+                            Byte note = getChildTag(tileentity, "note", ByteTag.class, Byte.class);
+                            Integer record = getChildTag(tileentity, "Record", IntTag.class, Integer.class);
+
+                            RecordItem recorditem = null;
+                            if (tileentity.containsKey("RecordItem")) {
+                                Map<String, Tag> recorditemtag = getChildTag(tileentity, "RecordItem", CompoundTag.class).getValue();
+                                Byte count = getChildTag(recorditemtag, "Count", ByteTag.class, Byte.class);
+                                Short damage = getChildTag(recorditemtag, "Damage", ShortTag.class, Short.class);
+                                Short recorditemid = getChildTag(recorditemtag, "id", ShortTag.class, Short.class);
+                                recorditem = new RecordItem(count, damage, recorditemid);
+                            }
+
+                            Short brewtime = getChildTag(tileentity, "BrewTime", ShortTag.class, Short.class);
+                            String command = getChildTag(tileentity, "Command", StringTag.class, String.class); 
+
+                            tileentities.add(new TileEntity(x, y, z, customname, id, items, rot, skulltype, delay, maxnearbyentities, maxspawndelay, minspawndelay, requiredplayerrange, spawncount, spawnrange, entityid, burntime, cooktime, text1, text2, text3, text4, note, record, recorditem, brewtime, command));
                         }
                     }
                 }
@@ -424,6 +531,7 @@ public class SchematicUtil {
         
         return schem;
     }
+
     private <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result) {
         if (!items.containsKey(key)) {
             return null;
@@ -545,6 +653,72 @@ public class SchematicUtil {
             }
 
             return enchants;
+        } else {
+            return null;
+        }
+    }
+    
+    private List<Equipment> getEquipment(Map<String, Tag> entity) {
+        List<?> equipmentlist = getChildTag(entity, "Equipment", ListTag.class, List.class);
+
+        if (equipmentlist != null) {
+            List<Equipment> equipments = new ArrayList<Equipment>();
+
+            for (Object equipmentelement : equipmentlist) {
+                if (equipmentelement instanceof CompoundTag) {
+                    Map<String, Tag> equipment = ((CompoundTag) equipmentelement).getValue();
+                    //TODO
+                    equipments.add(new Equipment());
+                }
+            }
+
+            return equipments;
+        } else {
+            return null;
+        }
+    }
+
+    private List<Attribute> getAttributes(Map<String, Tag> entity) {
+        List<?> attributelist = getChildTag(entity, "Attributes", ListTag.class, List.class);
+
+        if (attributelist != null) {
+            List<Attribute> attributes = new ArrayList<Attribute>();
+
+            for (Object attributeelement : attributelist) {
+                if (attributeelement instanceof CompoundTag) {
+                    Map<String, Tag> attribute = ((CompoundTag) attributeelement).getValue();
+                    Double base = getChildTag(attribute, "Base", DoubleTag.class, Double.class);
+                    String name = getChildTag(attribute, "Name", StringTag.class, String.class);
+                    List<Modifier> modifiers = getModifiers(attribute);                    
+                    
+                    attributes.add(new Attribute(base, name, modifiers));
+                }
+            }
+
+            return attributes;
+        } else {
+            return null;
+        }
+    }
+
+    private List<Modifier> getModifiers(Map<String, Tag> attribute) {
+        List<?> modifierlist = getChildTag(attribute, "Modifiers", ListTag.class, List.class);
+
+        if (modifierlist != null) {
+            List<Modifier> modifiers = new ArrayList<Modifier>();
+
+            for (Object modifierelement : modifierlist) {
+                if (modifierelement instanceof CompoundTag) {
+                    Map<String, Tag> modifier = ((CompoundTag) modifierelement).getValue();
+                    Integer operation = getChildTag(modifier, "Operation", IntTag.class, Integer.class);
+                    Double amount = getChildTag(modifier, "Amount", DoubleTag.class, Double.class);
+                    String name = getChildTag(modifier, "Name", StringTag.class, String.class); 
+                    
+                    modifiers.add(new Modifier(operation, amount, name));
+                }
+            }
+
+            return modifiers;
         } else {
             return null;
         }

@@ -22,8 +22,31 @@ public class Entity extends AbstractSchematicElement {
     private List<Double> motion;
     private List<Double> pos;
     private List<Float> rotation;
+    
+    private Byte canpickuploot;
+    private Byte color;
+    private Byte customnamevisible;
+    private Byte leashed;
+    private Byte persistencerequired;
+    private Byte sheared;
+    private Short attacktime;
+    private Short deathtime;
+    private Short health;
+    private Short hurttime;
+    private Integer age;
+    private Integer inlove;
+    private Float absorptionamount;
+    private Float healf;
+    private String customname;
+    private List<Attribute> attributes;
+    private List<Float> dropchances;
+    private List<Equipment> equipments;
 
-    public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Float> rotation) {
+    public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, 
+            Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Float> rotation,
+            Byte canpickuploot, Byte color, Byte customnamevisible, Byte leashed, Byte persistencerequired, Byte sheared, Short attacktime, Short deathtime, 
+            Short health, Short hurttime, Integer age, Integer inlove, Float absorptionamount, Float healf, String customname, List<Attribute> attributes, 
+            List<Float> dropchances, List<Equipment> equipments) {
         this.dir = dir;
         this.direction = direction;
         this.invulnerable = invulnerable;
@@ -41,6 +64,24 @@ public class Entity extends AbstractSchematicElement {
         this.motion = motion;
         this.pos = pos;
         this.rotation = rotation;
+        this.canpickuploot = canpickuploot;
+        this.color = color;
+        this.customnamevisible = customnamevisible;
+        this.leashed = leashed;
+        this.persistencerequired = persistencerequired;
+        this.sheared = sheared;
+        this.attacktime = attacktime;
+        this.deathtime = deathtime;
+        this.health = health;
+        this.hurttime = hurttime;
+        this.age = age;
+        this.inlove = inlove;
+        this.absorptionamount = absorptionamount;
+        this.healf = healf;
+        this.customname = customname;
+        this.attributes = attributes;
+        this.dropchances = dropchances;
+        this.equipments = equipments;
     }
 
     public Byte getDir() {
@@ -110,6 +151,78 @@ public class Entity extends AbstractSchematicElement {
     public List<Float> getRotation() {
         return rotation;
     }
+
+    public Byte getCanPickupLoot() {
+        return canpickuploot;
+    }
+
+    public Byte getColor() {
+        return color;
+    }
+
+    public Byte getCustomNameVisible() {
+        return customnamevisible;
+    }
+
+    public Byte getLeashed() {
+        return leashed;
+    }
+
+    public Byte getPersistenceRequired() {
+        return persistencerequired;
+    }
+
+    public Byte getSheared() {
+        return sheared;
+    }
+
+    public Short getAttackTime() {
+        return attacktime;
+    }
+
+    public Short getDeathTime() {
+        return deathtime;
+    }
+
+    public Short getHealth() {
+        return health;
+    }
+
+    public Short getHurtTime() {
+        return hurttime;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public Integer getInLove() {
+        return inlove;
+    }
+
+    public Float getAbsorptionAmount() {
+        return absorptionamount;
+    }
+
+    public Float getHealF() {
+        return healf;
+    }
+
+    public String getCustomName() {
+        return customname;
+    }
+
+    public List<Attribute> getAttributes() {
+        return attributes;
+    }
+
+    public List<Float> getDropChances() {
+        return dropchances;
+    }
+
+    public List<Equipment> getEquipments() {
+        return equipments;
+    }
     
     public String toString()
     {
@@ -130,6 +243,24 @@ public class Entity extends AbstractSchematicElement {
     			", motive=" + Sanitize(motive) + 
     			", motion=" + Sanitize(motion) + 
     			", pos=" + Sanitize(pos) + 
-    			", rotation=" + Sanitize(rotation) + "}";
+    			", rotation=" + Sanitize(rotation) + 
+                ", canpickuploot=" + Sanitize(canpickuploot) + 
+                ", color=" + Sanitize(color) + 
+                ", customnamevisible=" + Sanitize(customnamevisible) + 
+                ", leashed=" + Sanitize(leashed) + 
+                ", persistencerequired=" + Sanitize(persistencerequired) + 
+                ", sheared=" + Sanitize(sheared) + 
+                ", attacktime=" + Sanitize(attacktime) + 
+                ", deathtime=" + Sanitize(deathtime) + 
+                ", health=" + Sanitize(health) + 
+                ", hurttime=" + Sanitize(hurttime) + 
+                ", age=" + Sanitize(age) + 
+                ", inlove=" + Sanitize(inlove) + 
+                ", absorptionamount=" + Sanitize(absorptionamount) + 
+                ", healf=" + Sanitize(healf) + 
+                ", customname=" + Sanitize(customname) + 
+                ", attributes=" + Sanitize(attributes) + 
+                ", dropchances=" + Sanitize(dropchances) + 
+                ", equipments=" + Sanitize(equipments) + "}";
     }
 }

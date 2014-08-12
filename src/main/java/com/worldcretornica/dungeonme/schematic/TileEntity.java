@@ -1,9 +1,8 @@
 package com.worldcretornica.dungeonme.schematic;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class TileEntity extends AbstractSchematicElement implements Serializable {
+public class TileEntity extends AbstractSchematicElement {
 
     private static final long serialVersionUID = -2080234794735672945L;
     private Integer x;
@@ -28,14 +27,17 @@ public class TileEntity extends AbstractSchematicElement implements Serializable
     private String text2;
     private String text3;
     private String text4;
-    
-    //TODO
-    //brewing stand, commandblock, jukebox, noteblock
-    
+    private Byte note;
+    private Integer record;
+    private RecordItem recorditem;
+    private Short brewtime;
+    private String command;
+        
     public TileEntity(Integer x, Integer y, Integer z, String customname, String id, List<Item> items, Byte rot, 
             Byte skulltype, Short delay, Short maxnearbyentities, Short maxspawndelay, Short minspawndelay, 
             Short requiredplayerrange, Short spawncount, Short spawnrange, String entityid, Short burntime, Short cooktime,
-            String text1, String text2, String text3, String text4) {
+            String text1, String text2, String text3, String text4, Byte note, Integer record, RecordItem recorditem,
+            Short brewtime, String command) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -58,6 +60,11 @@ public class TileEntity extends AbstractSchematicElement implements Serializable
         this.text2 = text2;
         this.text3 = text3;
         this.text4 = text4;
+        this.note = note;
+        this.record = record;
+        this.recorditem = recorditem;
+        this.brewtime = brewtime;
+        this.command = command;
     }
 
     public Integer getX() {
@@ -148,6 +155,26 @@ public class TileEntity extends AbstractSchematicElement implements Serializable
         return text4;
     }
     
+    public Byte getNote() {
+        return note;
+    }
+    
+    public Integer getRecord() {
+        return record;
+    }
+    
+    public RecordItem getRecordItem() {
+        return recorditem;
+    }
+    
+    public Short getBrewTime() {
+        return brewtime;
+    }
+    
+    public String getCommand() {
+        return command;
+    }
+    
     public String toString() {
         return "{" + this.getClass().getName() + 
                 ": x=" + Sanitize(x) +
@@ -171,6 +198,11 @@ public class TileEntity extends AbstractSchematicElement implements Serializable
                 ", text1=" + Sanitize(text1) + 
                 ", text2=" + Sanitize(text2) + 
                 ", text3=" + Sanitize(text3) + 
-                ", text4=" + Sanitize(text4) + "}";
+                ", text4=" + Sanitize(text4) + 
+                ", note=" + Sanitize(note) + 
+                ", record=" + Sanitize(record) +
+                ", recorditem=" + Sanitize(recorditem) + 
+                ", brewtime=" + Sanitize(brewtime) + 
+                ", command=" + Sanitize(command) + "}";
     }
 }
