@@ -1,10 +1,12 @@
-package com.worldcretornica.dungeonme;
+package com.worldcretornica.dungeonme.populator;
 
 import java.util.Random;
 
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.generator.BlockPopulator;
+
+import com.worldcretornica.dungeonme.Orientation;
 
 public class DoorPopulator extends BlockPopulator {
 

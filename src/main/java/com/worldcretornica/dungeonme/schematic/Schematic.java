@@ -1,9 +1,12 @@
 package com.worldcretornica.dungeonme.schematic;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Schematic extends AbstractSchematicElement {
+public class Schematic extends AbstractSchematicElement implements Serializable {
  
+    private static final long serialVersionUID = 8966082365181590943L;
+    
     private byte[] blocks;
     private byte[] data;
     private byte[] biomes;
@@ -13,8 +16,10 @@ public class Schematic extends AbstractSchematicElement {
     private Short height;
     private List<Entity> entities;
     private List<TileEntity> tileentities;
+    private String roomauthor;
+    private Long checksum;
  
-    public Schematic(byte[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities) {
+    public Schematic(byte[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum) {
         this.blocks = blocks;
         this.data = data;
         this.biomes = biomes;
@@ -24,6 +29,8 @@ public class Schematic extends AbstractSchematicElement {
         this.height = height;
         this.entities = entities;
         this.tileentities = tileentities;
+        this.roomauthor = roomauthor;
+        this.checksum = checksum;
     }
 
     public byte[] getBlocks() {
@@ -62,6 +69,14 @@ public class Schematic extends AbstractSchematicElement {
         return tileentities;
     }
     
+    public String getRoomAuthor() {
+        return roomauthor;
+    }
+    
+    public Long getChecksum() {
+        return checksum;
+    }
+    
     public String toString() {
         return "{" + this.getClass().getName() + 
                 ": blocks=" + Sanitize(blocks) +
@@ -72,6 +87,8 @@ public class Schematic extends AbstractSchematicElement {
                 ", length=" + Sanitize(length) +
                 ", height=" + Sanitize(height) +
                 ", entities=" + Sanitize(entities) + 
-                ", tileentities=" + Sanitize(tileentities) + "}";
+                ", tileentities=" + Sanitize(tileentities) + 
+                ", roomauthor=" + Sanitize(roomauthor) +
+                ", checksum=" + Sanitize(checksum) + "}";
     }
 }

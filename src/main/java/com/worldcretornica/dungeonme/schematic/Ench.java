@@ -2,6 +2,7 @@ package com.worldcretornica.dungeonme.schematic;
 
 public class Ench extends AbstractSchematicElement {
 
+    private static final long serialVersionUID = 8903585791760402815L;
     private Short id;
     private Short lvl;
         

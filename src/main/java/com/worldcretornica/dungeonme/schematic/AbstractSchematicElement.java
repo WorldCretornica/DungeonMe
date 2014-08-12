@@ -1,6 +1,10 @@
 package com.worldcretornica.dungeonme.schematic;
 
-public abstract class AbstractSchematicElement {
+import java.io.Serializable;
+
+public abstract class AbstractSchematicElement implements Serializable {
+
+    private static final long serialVersionUID = -504382438942523971L;
 
     public abstract String toString();
     

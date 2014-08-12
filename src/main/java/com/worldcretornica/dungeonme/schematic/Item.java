@@ -2,6 +2,7 @@ package com.worldcretornica.dungeonme.schematic;
 
 public class Item extends AbstractSchematicElement {
 
+    private static final long serialVersionUID = 8615036231087494336L;
     private Byte count;
     private Byte slot;
     private Short damage;

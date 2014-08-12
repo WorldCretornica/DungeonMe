@@ -4,6 +4,7 @@ import java.util.List;
 
 public class Entity extends AbstractSchematicElement {
 
+    private static final long serialVersionUID = 3315103410018232693L;
     private Byte dir;
     private Byte direction;
     private Byte invulnerable;

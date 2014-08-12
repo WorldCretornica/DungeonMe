@@ -1,13 +1,17 @@
 package com.worldcretornica.dungeonme;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -22,13 +26,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 import com.comphenix.protocol.wrappers.nbt.NbtList;
-import com.worldcretornica.dungeonme.jnbt.SchematicUtil;
 import com.worldcretornica.dungeonme.schematic.Schematic;
 
 public class DungeonMe extends JavaPlugin implements Listener {
 
-    
-    private static Logger logger;
+    private SchematicUtil schematicutil;
     
     @Override
     public void onDisable() {
@@ -37,27 +39,12 @@ public class DungeonMe extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-    	/*try {
-    		
-    		getLogger().info("Loading schematic...");
-			Schematic schem = SchematicUtil.loadSchematic(new File("C:\\Minecraft\\Schematic\\ZachBoraTest1.schematic"));
-			//getLogger().info("Finished loading. Outputting :");
-			//getLogger().info(schem.toString());
-			
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-        
-        logger = getLogger();
-        
         Bukkit.getPluginManager().registerEvents(this, this);
-    	
-        for(World w : Bukkit.getWorlds()) {
-            if(w.getGenerator() instanceof DungeonGenerator) {
-                w.setSpawnLocation(8, 65, 8);
-            }
-        }
+        
+        prepareFolders();
+        
+        schematicutil = new SchematicUtil(this);
+        schematicutil.loadSchematics();
     }
 
     @Override
@@ -82,28 +69,46 @@ public class DungeonMe extends JavaPlugin implements Listener {
                 }
             }else if(args[0].equalsIgnoreCase("paste")) {
                 
-                getLogger().info("Loading schematic...");
-                try {
-                    Schematic schem = SchematicUtil.loadSchematic(new File("C:\\Minecraft\\Schematic\\Test2.schematic"));
+                if (args.length > 1) {
                     
                     if(sender instanceof Player) {
                         Player p = (Player) sender;
                         Location l = p.getLocation();
                         
-                        SchematicUtil.pasteSchematic(l, schem);
+                        int schemid = 0;
+                        
+                        try {
+                            schemid = Integer.parseInt(args[1]);
+                        } catch (NumberFormatException e) {
+                            
+                        }
+                        
+                        schematicutil.pasteSchematic(l, schemid);
                     }
-                } catch (IllegalArgumentException | IOException e) {
-                    e.printStackTrace();
+                    
+                } else {
+                
+                    getLogger().info("Loading schematic...");
+                    try {
+                        Schematic schem = schematicutil.loadSchematic(new File("C:\\Minecraft\\Schematic\\Test2.schematic"));
+                        
+                        if(sender instanceof Player) {
+                            Player p = (Player) sender;
+                            Location l = p.getLocation();
+                            
+                            schematicutil.pasteSchematic(l, schem);
+                        }
+                    } catch (IllegalArgumentException | IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+            
+            return true;
         }
         return false;
     }
-    
-    public static void log(String text) {
-        logger.info(text);
-    }
-    
+        
  
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
@@ -128,6 +133,70 @@ public class DungeonMe extends JavaPlugin implements Listener {
                             p.sendMessage("door unlocked");
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    private void prepareFolders() {
+        File root = this.getDataFolder();
+        if (!root.exists()) {
+            root.mkdir();
+        }
+            
+        File rooms = new File(root.getPath() + "/Rooms");
+        
+        if (!rooms.exists()) {
+            rooms.mkdir();
+        }
+        
+        File buff = new File(root.getPath() + "/.Buff");
+        
+        if (!buff.exists()) {
+            buff.mkdir();
+        }
+        
+        String resourcepath = "Rooms";
+
+        final File jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+
+        if (jarFile.isFile()) { // Run with JAR file
+            JarFile jar = null;
+            try {
+                jar = new JarFile(jarFile);
+
+                final Enumeration<JarEntry> entries = jar.entries(); 
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (name.startsWith(resourcepath + "/") && !entry.isDirectory()) {
+                        String filename = name.substring(name.lastIndexOf("/"));
+                        
+                        InputStream input = jar.getInputStream(entry);
+                        
+                        File of = new File(rooms.getPath() + "\\" + filename);
+                        
+                        if(!of.exists()) {
+                            OutputStream output = new FileOutputStream(of);
+            
+                            byte[] buffer = new byte[1024];
+    
+                            int bytesRead;
+    
+                            while ((bytesRead = input.read(buffer)) > 0) {
+                                output.write(buffer, 0, bytesRead);
+                            }
+                            
+                            output.close();
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    jar.close();
+                } catch (IOException e) {
                 }
             }
         }

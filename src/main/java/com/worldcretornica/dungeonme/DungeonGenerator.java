@@ -9,6 +9,9 @@ import org.bukkit.World;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
+import com.worldcretornica.dungeonme.populator.DoorPopulator;
+import com.worldcretornica.dungeonme.populator.StairPopulator;
+
 public class DungeonGenerator extends ChunkGenerator {
 
     @Override

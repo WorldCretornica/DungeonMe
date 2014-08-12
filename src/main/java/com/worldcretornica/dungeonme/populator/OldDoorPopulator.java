@@ -1,4 +1,4 @@
-package com.worldcretornica.dungeonme;
+package com.worldcretornica.dungeonme.populator;
 
 import java.util.Random;
 
