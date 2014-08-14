@@ -49,7 +49,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
 
     @Override
     public ChunkGenerator getDefaultWorldGenerator(String worldname, String id) {
-        return new DungeonGenerator();
+        return new DungeonGenerator(this);
     }
     
     @Override

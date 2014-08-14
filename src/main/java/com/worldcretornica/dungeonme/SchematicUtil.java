@@ -421,48 +421,8 @@ public class SchematicUtil {
                     entities = new ArrayList<Entity>();
 
                     for (Object tag : entitiesList) {
-                        if (tag instanceof CompoundTag) {
-                            Map<String, Tag> entity = ((CompoundTag) tag).getValue();
-                            Byte dir = getChildTag(entity, "Dir", ByteTag.class, Byte.class);
-                            Byte direction = getChildTag(entity, "Direction", ByteTag.class, Byte.class);
-                            Byte invulnerable = getChildTag(entity, "Invulnerable", ByteTag.class, Byte.class);
-                            Byte onground = getChildTag(entity, "OnGround", ByteTag.class, Byte.class);
-                            Short air = getChildTag(entity, "Air", ShortTag.class, Short.class);
-                            Short fire = getChildTag(entity, "Fire", ShortTag.class, Short.class);
-                            Integer dimension = getChildTag(entity, "Dimension", IntTag.class, Integer.class);
-                            Integer portalcooldown = getChildTag(entity, "PortalCooldown", IntTag.class, Integer.class);
-                            Integer tilex = getChildTag(entity, "TileX", IntTag.class, Integer.class);
-                            Integer tiley = getChildTag(entity, "TileY", IntTag.class, Integer.class);
-                            Integer tilez = getChildTag(entity, "TileZ", IntTag.class, Integer.class);
-                            Float falldistance = getChildTag(entity, "FallDistance", FloatTag.class, Float.class);
-                            String id = getChildTag(entity, "id", StringTag.class, String.class);
-                            String motive = getChildTag(entity, "Motive", StringTag.class, String.class);
-                            List<Double> motion = convert(getChildTag(entity, "Motion", ListTag.class, List.class), Double.class);
-                            List<Double> pos = convert(getChildTag(entity, "Pos", ListTag.class, List.class), Double.class);
-                            List<Float> rotation = convert(getChildTag(entity, "Rotation", ListTag.class, List.class), Float.class);
-
-                            Byte canpickuploot = getChildTag(entity, "CanPickUpLoot", ByteTag.class, Byte.class);
-                            Byte color = getChildTag(entity, "Color", ByteTag.class, Byte.class);
-                            Byte customnamevisible = getChildTag(entity, "CustomNameVisible", ByteTag.class, Byte.class);
-                            Byte leashed = getChildTag(entity, "Leashed", ByteTag.class, Byte.class);
-                            Byte persistencerequired = getChildTag(entity, "PersistenceRequired", ByteTag.class, Byte.class);
-                            Byte sheared = getChildTag(entity, "Sheared", ByteTag.class, Byte.class);
-                            Short attacktime = getChildTag(entity, "AttachTime", ShortTag.class, Short.class);
-                            Short deathtime = getChildTag(entity, "DeathTime", ShortTag.class, Short.class);
-                            Short health = getChildTag(entity, "Health", ShortTag.class, Short.class);
-                            Short hurttime = getChildTag(entity, "HurtTime", ShortTag.class, Short.class);
-                            Integer age = getChildTag(entity, "Age", IntTag.class, Integer.class);
-                            Integer inlove = getChildTag(entity, "InLove", IntTag.class, Integer.class);
-                            Float absorptionamount= getChildTag(entity, "AbsorptionAmount", FloatTag.class, Float.class);
-                            Float healf= getChildTag(entity, "HealF", FloatTag.class, Float.class);
-                            String customname = getChildTag(entity, "CustomName", StringTag.class, String.class);
-                            List<Attribute> attributes = getAttributes(entity);
-                            List<Float> dropchances = convert(getChildTag(entity, "DropChances", ListTag.class, List.class), Float.class);
-                            List<Equipment> equipments = getEquipment(entity);
-                                                       
-                            entities.add(new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
-                                    canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
-                                    healf, customname, attributes, dropchances, equipments));
+                        if (tag instanceof CompoundTag) {                                          
+                            entities.add(getEntity(tag));
                         }
                     }
                 }
@@ -532,6 +492,58 @@ public class SchematicUtil {
         return schem;
     }
 
+    private Entity getEntity(Object tag) {
+        Map<String, Tag> entity = ((CompoundTag) tag).getValue();
+        Byte dir = getChildTag(entity, "Dir", ByteTag.class, Byte.class);
+        Byte direction = getChildTag(entity, "Direction", ByteTag.class, Byte.class);
+        Byte invulnerable = getChildTag(entity, "Invulnerable", ByteTag.class, Byte.class);
+        Byte onground = getChildTag(entity, "OnGround", ByteTag.class, Byte.class);
+        Short air = getChildTag(entity, "Air", ShortTag.class, Short.class);
+        Short fire = getChildTag(entity, "Fire", ShortTag.class, Short.class);
+        Integer dimension = getChildTag(entity, "Dimension", IntTag.class, Integer.class);
+        Integer portalcooldown = getChildTag(entity, "PortalCooldown", IntTag.class, Integer.class);
+        Integer tilex = getChildTag(entity, "TileX", IntTag.class, Integer.class);
+        Integer tiley = getChildTag(entity, "TileY", IntTag.class, Integer.class);
+        Integer tilez = getChildTag(entity, "TileZ", IntTag.class, Integer.class);
+        Float falldistance = getChildTag(entity, "FallDistance", FloatTag.class, Float.class);
+        String id = getChildTag(entity, "id", StringTag.class, String.class);
+        String motive = getChildTag(entity, "Motive", StringTag.class, String.class);
+        List<Double> motion = convert(getChildTag(entity, "Motion", ListTag.class, List.class), Double.class);
+        List<Double> pos = convert(getChildTag(entity, "Pos", ListTag.class, List.class), Double.class);
+        List<Float> rotation = convert(getChildTag(entity, "Rotation", ListTag.class, List.class), Float.class);
+
+        Byte canpickuploot = getChildTag(entity, "CanPickUpLoot", ByteTag.class, Byte.class);
+        Byte color = getChildTag(entity, "Color", ByteTag.class, Byte.class);
+        Byte customnamevisible = getChildTag(entity, "CustomNameVisible", ByteTag.class, Byte.class);
+        Byte leashed = getChildTag(entity, "Leashed", ByteTag.class, Byte.class);
+        Byte persistencerequired = getChildTag(entity, "PersistenceRequired", ByteTag.class, Byte.class);
+        Byte sheared = getChildTag(entity, "Sheared", ByteTag.class, Byte.class);
+        Short attacktime = getChildTag(entity, "AttachTime", ShortTag.class, Short.class);
+        Short deathtime = getChildTag(entity, "DeathTime", ShortTag.class, Short.class);
+        Short health = getChildTag(entity, "Health", ShortTag.class, Short.class);
+        Short hurttime = getChildTag(entity, "HurtTime", ShortTag.class, Short.class);
+        Integer age = getChildTag(entity, "Age", IntTag.class, Integer.class);
+        Integer inlove = getChildTag(entity, "InLove", IntTag.class, Integer.class);
+        Float absorptionamount= getChildTag(entity, "AbsorptionAmount", FloatTag.class, Float.class);
+        Float healf= getChildTag(entity, "HealF", FloatTag.class, Float.class);
+        String customname = getChildTag(entity, "CustomName", StringTag.class, String.class);
+        List<Attribute> attributes = getAttributes(entity);
+        List<Float> dropchances = convert(getChildTag(entity, "DropChances", ListTag.class, List.class), Float.class);
+        List<Equipment> equipments = getEquipment(entity);
+        
+        Byte skeletontype = getChildTag(entity, "SkeletonType", ByteTag.class, Byte.class);
+        
+        Entity riding = null;
+        
+        if (entity.containsKey("Riding")) {
+            riding = getEntity(getChildTag(entity, "Riding", CompoundTag.class));
+        }
+                                   
+        return new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
+                canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
+                healf, customname, attributes, dropchances, equipments, skeletontype, riding);
+    }
+
     private <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result) {
         if (!items.containsKey(key)) {
             return null;
@@ -546,6 +558,7 @@ public class SchematicUtil {
         }
         return result.cast(obj);
     }
+    
     private <T extends Tag> T getChildTag(Map<String, Tag> items, String key, Class<T> expected) {
         if (!items.containsKey(key)) {
             return null;
@@ -556,6 +569,7 @@ public class SchematicUtil {
         }
         return expected.cast(tag);
     }
+    
     private <T> T convert(Object obj, Class<T> expected) {
         if (!(obj instanceof Tag)) {
             return null;
@@ -570,6 +584,7 @@ public class SchematicUtil {
             return expected.cast(tag.getValue());
         }
     }
+    
     private <T> List<T> convert(List<?> tagList, Class<T> expected) {
         if (tagList != null) {
             List<T> newlist = new ArrayList<T>();
@@ -581,6 +596,7 @@ public class SchematicUtil {
             return null;
         }
     }
+    
     private List<Item> getItems(Map<String, Tag> tileentity) {
         List<?> itemsList = getChildTag(tileentity, "Items", ListTag.class, List.class);
 
@@ -606,6 +622,7 @@ public class SchematicUtil {
             return null;
         }
     }
+    
     private ItemTag getItemTag(Map<String, Tag> item) {
         CompoundTag itemtagElement = getChildTag(item, "tag", CompoundTag.class);
 
@@ -623,6 +640,7 @@ public class SchematicUtil {
             return null;
         }
     }
+    
     private Display getDisplay(Map<String, Tag> itemtag) {
         CompoundTag displayElement = getChildTag(itemtag, "display", CompoundTag.class);
 
@@ -636,6 +654,7 @@ public class SchematicUtil {
             return null;
         }
     }
+    
     private List<Ench> getEnchant(Map<String, Tag> enchanttag) {
         List<?> enchantList = getChildTag(enchanttag, "ench", ListTag.class, List.class);
 
@@ -667,8 +686,10 @@ public class SchematicUtil {
             for (Object equipmentelement : equipmentlist) {
                 if (equipmentelement instanceof CompoundTag) {
                     Map<String, Tag> equipment = ((CompoundTag) equipmentelement).getValue();
-                    //TODO
-                    equipments.add(new Equipment());
+                    Byte count = getChildTag(equipment, "Count", ByteTag.class, Byte.class);
+                    Short damage = getChildTag(equipment, "Damage", ShortTag.class, Short.class);
+                    String id = getChildTag(equipment, "id", StringTag.class, String.class);
+                    equipments.add(new Equipment(count, damage, id));
                 }
             }
 

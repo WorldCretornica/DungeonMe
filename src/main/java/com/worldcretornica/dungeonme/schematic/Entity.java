@@ -41,12 +41,15 @@ public class Entity extends AbstractSchematicElement {
     private List<Attribute> attributes;
     private List<Float> dropchances;
     private List<Equipment> equipments;
+    
+    private Byte skeletontype;
+    private Entity riding;
 
     public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, 
             Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Float> rotation,
             Byte canpickuploot, Byte color, Byte customnamevisible, Byte leashed, Byte persistencerequired, Byte sheared, Short attacktime, Short deathtime, 
             Short health, Short hurttime, Integer age, Integer inlove, Float absorptionamount, Float healf, String customname, List<Attribute> attributes, 
-            List<Float> dropchances, List<Equipment> equipments) {
+            List<Float> dropchances, List<Equipment> equipments, Byte skeletontype, Entity riding) {
         this.dir = dir;
         this.direction = direction;
         this.invulnerable = invulnerable;
@@ -82,6 +85,8 @@ public class Entity extends AbstractSchematicElement {
         this.attributes = attributes;
         this.dropchances = dropchances;
         this.equipments = equipments;
+        this.skeletontype = skeletontype;
+        this.riding = riding;
     }
 
     public Byte getDir() {
@@ -224,6 +229,14 @@ public class Entity extends AbstractSchematicElement {
         return equipments;
     }
     
+    public Byte getSkeletonType() {
+        return skeletontype;
+    }
+    
+    public Entity getRiding() {
+        return riding;
+    }
+    
     public String toString()
     {
     	return "{" + this.getClass().getName() + 
@@ -261,6 +274,8 @@ public class Entity extends AbstractSchematicElement {
                 ", customname=" + Sanitize(customname) + 
                 ", attributes=" + Sanitize(attributes) + 
                 ", dropchances=" + Sanitize(dropchances) + 
-                ", equipments=" + Sanitize(equipments) + "}";
+                ", equipments=" + Sanitize(equipments) + 
+                ", skeletontype=" + Sanitize(skeletontype) +
+                ", riding=" + Sanitize(riding) + "}";
     }
 }

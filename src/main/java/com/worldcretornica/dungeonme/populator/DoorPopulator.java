@@ -33,7 +33,7 @@ public class DoorPopulator extends BlockPopulator {
 
 			// bottomZ door
 			door = current.nextInt(100) + 1;
-			locked = current.nextInt(5) + 1 == 4;
+			locked = current.nextInt(25) + 1 == 4;
 
 			if (door > 40) {
 				if (door > 70) {
@@ -53,7 +53,7 @@ public class DoorPopulator extends BlockPopulator {
 
 			// bottomX door
 			door = current.nextInt(100) + 1;
-			locked = current.nextInt(5) + 1 == 4;
+			locked = current.nextInt(25) + 1 == 4;
 
 			if (door > 40) {
 				if (door > 70) {
@@ -89,7 +89,7 @@ public class DoorPopulator extends BlockPopulator {
 			current = new Random(seed ^ ((roomx + 1) << 32) ^ (roomy << 16)	^ roomz);
 
 			door = current.nextInt(100) + 1;
-			locked = current.nextInt(5) + 1 == 4;
+			locked = current.nextInt(25) + 1 == 4;
 			door = current.nextInt(100) + 1;
 
 			if (door > 40) {
