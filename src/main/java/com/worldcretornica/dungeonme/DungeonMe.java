@@ -27,6 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 import com.comphenix.protocol.wrappers.nbt.NbtList;
+import com.worldcretornica.dungeonme.map.DungeonFont;
 import com.worldcretornica.dungeonme.map.MapListener;
 import com.worldcretornica.dungeonme.schematic.Schematic;
 
@@ -49,6 +50,8 @@ public class DungeonMe extends JavaPlugin implements Listener {
         
         schematicutil = new SchematicUtil(this);
         schematicutil.loadSchematics();
+        
+        new DungeonFont();
     }
 
     @Override

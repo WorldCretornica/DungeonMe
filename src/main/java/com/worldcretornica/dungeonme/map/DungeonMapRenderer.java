@@ -1,21 +1,23 @@
 package com.worldcretornica.dungeonme.map;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Animals;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Ghast;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
+import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapPalette;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
-import org.bukkit.map.MinecraftFont;
 import org.bukkit.map.MapCursor.Type;
 import org.bukkit.map.MapCursorCollection;
 
@@ -26,8 +28,20 @@ public class DungeonMapRenderer extends MapRenderer {
     @SuppressWarnings("unused")
     private DungeonMe plugin;
     
-    public DungeonMapRenderer(DungeonMe instance) {
+    private static DungeonMapRenderer renderer = null;
+    
+    private DungeonMapRenderer() {
+    }
+    
+    private DungeonMapRenderer(DungeonMe instance) {
         plugin = instance;
+    }
+    
+    public static DungeonMapRenderer getInstance(DungeonMe instance) {
+        if (DungeonMapRenderer.renderer == null)
+            DungeonMapRenderer.renderer = new DungeonMapRenderer(instance);
+        
+        return DungeonMapRenderer.renderer;
     }
     
     @SuppressWarnings("deprecation")
@@ -46,52 +60,35 @@ public class DungeonMapRenderer extends MapRenderer {
         mv.setCenterX(centerX);
         mv.setCenterZ(centerZ);
         
-        Location center = new Location(w, centerX * 16 - 8, y + 4, centerZ * 16 - 8);
-        Arrow arrow = w.spawn(center, Arrow.class);
-        List<Entity> entities = arrow.getNearbyEntities(16, 4, 16);
-        
-        arrow.remove();
-        
-        //plugin.getLogger().info("Arrow " + center.toString());
-        
+        Location center = new Location(w, (centerX << 4) - 8, y + 2, (centerZ << 4) - 8);
+                
         MapCursorCollection cursors = new MapCursorCollection();
         
-        for(Entity entity : entities) {
-            if (entity instanceof LivingEntity) {
+        List<Entity> entities = new ArrayList<>();
+        entities.addAll(p.getNearbyEntities(16, 8, 16));
                 
-                byte type = Type.RED_POINTER.getValue();
-                
-                if (entity.equals((Entity) p)) {
-                    type = Type.WHITE_POINTER.getValue();
-                } else if (entity instanceof Player) {
-                    type = Type.BLUE_POINTER.getValue();
-                } else if(entity instanceof Animals) {
-                    type = Type.GREEN_POINTER.getValue();
-                }
-                
-                Location eloc = entity.getLocation();
-                
-                byte direction = 0;
-                float yaw = eloc.getYaw();
-                
-                direction = (byte) (((yaw + 11.25f) / 22.5f) - 1);
-                
-                if (direction < 0 || direction > 15) direction = 0;
-                
-                byte eX = (byte) ((eloc.getX() - center.getX()) * 2);
-                byte eY = (byte) ((eloc.getZ() - center.getZ()) * 2);
-                
-                cursors.addCursor(eX, eY, direction, type, true);
-            }
+        //Add player cursor first
+        MapCursor playercursor = getCursor(p, y, center, Type.WHITE_POINTER.getValue());
+        
+        if (playercursor != null) {
+            cursors.addCursor(playercursor);
         }
+        
+        //Add mobs 2nd
+        cursors = addCursors(entities, cursors, y, center, Monster.class, Type.RED_POINTER.getValue());
+        //Add Ghast
+        cursors = addCursors(entities, cursors, y, center, Ghast.class, Type.RED_POINTER.getValue());
+        //Add players 3rd
+        cursors = addCursors(entities, cursors, y, center, HumanEntity.class, Type.BLUE_POINTER.getValue());
+        //Add animals 4th
+        cursors = addCursors(entities, cursors, y, center, Animals.class, Type.GREEN_POINTER.getValue());
         
         mc.setCursors(cursors);
         
         for(int x = 0; x < 128; x++) {
             for(int z = 0; z < 128; z++) {
                 
-                Block b = w.getBlockAt((centerX * 16) + x - 64 - 8, y, (centerZ * 16) + z - 64 - 8);
-                
+                Block b = w.getBlockAt((centerX << 4) + x - 64 - 8, y, (centerZ << 4) + z - 64 - 8);
                 
                 switch(b.getType()) {
                 case AIR:
@@ -138,7 +135,47 @@ public class DungeonMapRenderer extends MapRenderer {
             }
         }
         
-        mc.drawText(2, 2, MinecraftFont.Font, "F" + lv);
+        mc.drawText(3, 3, DungeonFont.Font, "F" + lv);
     }
 
+    @SuppressWarnings("deprecation")
+    public MapCursor getCursor(Entity entity, int y, Location center, byte type) {
+        Location eloc = entity.getLocation();
+        
+        if (eloc.getBlockY() >= (y - 1) && eloc.getBlockY() <= (y + 7)) {
+            byte direction = 0;
+            float yaw = eloc.getYaw();
+            
+            while (yaw < 0) yaw = yaw + 360;
+            
+            direction = (byte) (((yaw + 11.25f) / 22.5f));
+            
+            if (direction < 0 || direction > 15) direction = 0;
+            
+            byte eX = (byte) ((eloc.getX() - center.getX()) * 2);
+            byte eY = (byte) ((eloc.getZ() - center.getZ()) * 2);
+            
+            return new MapCursor(eX, eY, direction, type, true);
+        } else {
+            return null;
+        }
+    }
+    
+    public MapCursorCollection addCursors(List<Entity> entities, MapCursorCollection cursors, int y, Location center, Class<?> clazz, byte type) {
+        for(Entity entity : entities) {
+            if (clazz.isInstance(entity)) {               
+                MapCursor cursor = getCursor(entity, y, center, type);
+                
+                if (cursor != null) {
+                    cursors.addCursor(cursor);
+                }
+                
+                if (cursors.size() >= 4) {
+                    break;
+                }
+            }
+        }
+        
+        return cursors;
+    }
 }

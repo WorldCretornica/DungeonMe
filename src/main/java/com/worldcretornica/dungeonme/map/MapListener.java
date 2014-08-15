@@ -24,7 +24,7 @@ public class MapListener implements Listener {
             mv.removeRenderer(r);
         }
         
-        mv.addRenderer(new DungeonMapRenderer(plugin));
+        mv.addRenderer(DungeonMapRenderer.getInstance(plugin));
     }
     
     
