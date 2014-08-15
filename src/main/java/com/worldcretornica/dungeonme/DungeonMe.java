@@ -21,11 +21,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 import com.comphenix.protocol.wrappers.nbt.NbtList;
+import com.worldcretornica.dungeonme.map.MapListener;
 import com.worldcretornica.dungeonme.schematic.Schematic;
 
 public class DungeonMe extends JavaPlugin implements Listener {
@@ -39,7 +41,9 @@ public class DungeonMe extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(this, this);
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(this, this);
+        pm.registerEvents(new MapListener(this), this);
         
         prepareFolders();
         
@@ -137,6 +141,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
             }
         }
     }
+    
     
     private void prepareFolders() {
         File root = this.getDataFolder();

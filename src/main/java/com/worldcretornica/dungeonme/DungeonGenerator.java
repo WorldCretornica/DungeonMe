@@ -14,6 +14,7 @@ import com.worldcretornica.dungeonme.populator.StairPopulator;
 
 public class DungeonGenerator extends ChunkGenerator {
 
+    @SuppressWarnings("unused")
     private DungeonMe plugin;
     
     public DungeonGenerator(DungeonMe instance) {
@@ -132,5 +133,9 @@ public class DungeonGenerator extends ChunkGenerator {
     
     public List<BlockPopulator> getDefaultPopulators(World world) {
         return Arrays.asList(new DoorPopulator(), new StairPopulator());
+    }
+    
+    public boolean canSpawn(World world, int x, int z) {
+        return true;
     }
 }
