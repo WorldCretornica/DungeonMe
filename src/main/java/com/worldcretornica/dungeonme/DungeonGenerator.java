@@ -39,12 +39,12 @@ public class DungeonGenerator extends ChunkGenerator {
         for (long roomY = 0; roomY < (maxY >> 3); roomY++) {
             //Check if it's a 4x4x4 room
             rand = new Random(seed ^ (roomX2 << 32) ^ ((roomY >> 2) << 16) ^ roomZ2);
-            if ((rand.nextInt(100) + 1) >= 95) {
+            if ((rand.nextInt(100) + 1) >= 99) {
                 setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 35);
             } else {
                 //Check if it's a 4x4x2 room
                 rand = new Random(seed ^ (roomX2 << 32) ^ ((roomY >> 1) << 16) ^ roomZ2);
-                if ((rand.nextInt(100) + 1) >= 95) {
+                if ((rand.nextInt(100) + 1) >= 97) {
                     setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 17);
                 } else {
                     //Check if it's a 2x2x2 room
@@ -54,7 +54,7 @@ public class DungeonGenerator extends ChunkGenerator {
                     } else {
                         //Check if it's a 2x2x1
                         rand = new Random(seed ^ (roomX1 << 32) ^ ((roomY) << 16) ^ roomZ1);
-                        if ((rand.nextInt(100) + 1) >= 95) {
+                        if ((rand.nextInt(100) + 1) >= 90) {
                             setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 2);
                         } else {
                             //Else make 1x1 room
