@@ -389,6 +389,10 @@ public class SchematicUtil {
                 short length = getChildTag(schematic, "Length", ShortTag.class, Short.class);
                 short height = getChildTag(schematic, "Height", ShortTag.class, Short.class);
                 String roomauthor = getChildTag(schematic, "RoomAuthor", StringTag.class, String.class);
+                
+                Integer originx = getChildTag(schematic, "WEOriginX", IntTag.class, Integer.class);
+                Integer originy = getChildTag(schematic, "WEOriginY", IntTag.class, Integer.class);
+                Integer originz = getChildTag(schematic, "WEOriginZ", IntTag.class, Integer.class);
 
                 String materials = getChildTag(schematic, "Materials", StringTag.class, String.class);
                 if (!materials.equals("Alpha")) {
@@ -422,7 +426,7 @@ public class SchematicUtil {
 
                     for (Object tag : entitiesList) {
                         if (tag instanceof CompoundTag) {                                          
-                            entities.add(getEntity(tag));
+                            entities.add(getEntity((CompoundTag) tag));
                         }
                     }
                 }
@@ -483,7 +487,7 @@ public class SchematicUtil {
                     }
                 }
 
-                schem = new Schematic(blocks, blockData, blockBiomes, materials, width, length, height, entities, tileentities, roomauthor, checksum);
+                schem = new Schematic(blocks, blockData, blockBiomes, materials, width, length, height, entities, tileentities, roomauthor, checksum, originx, originy, originz);
 
                 saveCompiledSchematic(schem, file.getName());
             }
@@ -491,9 +495,9 @@ public class SchematicUtil {
         
         return schem;
     }
-
-    private Entity getEntity(Object tag) {
-        Map<String, Tag> entity = ((CompoundTag) tag).getValue();
+    
+    public Entity getEntity(CompoundTag tag) {
+        Map<String, Tag> entity = tag.getValue();
         Byte dir = getChildTag(entity, "Dir", ByteTag.class, Byte.class);
         Byte direction = getChildTag(entity, "Direction", ByteTag.class, Byte.class);
         Byte invulnerable = getChildTag(entity, "Invulnerable", ByteTag.class, Byte.class);
@@ -538,13 +542,194 @@ public class SchematicUtil {
         if (entity.containsKey("Riding")) {
             riding = getEntity(getChildTag(entity, "Riding", CompoundTag.class));
         }
-                                   
+        
+        Leash leash = null;
+        
+        if (entity.containsKey("Leash")) {
+            leash = getLeash(getChildTag(entity, "Leash", CompoundTag.class));
+        }
+                                  
         return new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
                 canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
-                healf, customname, attributes, dropchances, equipments, skeletontype, riding);
+                healf, customname, attributes, dropchances, equipments, skeletontype, riding, leash);
+    }
+    
+    public Leash getLeash(CompoundTag leashelement) {
+        Map<String, Tag> leash = ((CompoundTag) leashelement).getValue();
+        Integer x = getChildTag(leash, "X", IntTag.class, Integer.class);
+        Integer y = getChildTag(leash, "Y", IntTag.class, Integer.class);
+        Integer z = getChildTag(leash, "Z", IntTag.class, Integer.class);
+        
+        return new Leash(x, y, z);
+    }
+    
+    public Modifier getModifier(CompoundTag modifierelement) {
+        Map<String, Tag> modifier = ((CompoundTag) modifierelement).getValue();
+        Integer operation = getChildTag(modifier, "Operation", IntTag.class, Integer.class);
+        Double amount = getChildTag(modifier, "Amount", DoubleTag.class, Double.class);
+        String name = getChildTag(modifier, "Name", StringTag.class, String.class);
+        
+        return new Modifier(operation, amount, name);
+    }
+    
+    public List<Modifier> getModifiers(Map<String, Tag> attribute) {
+        List<?> modifierlist = getChildTag(attribute, "Modifiers", ListTag.class, List.class);
+
+        if (modifierlist != null) {
+            List<Modifier> modifiers = new ArrayList<Modifier>();
+
+            for (Object modifierelement : modifierlist) {
+                if (modifierelement instanceof CompoundTag) {                    
+                    modifiers.add(getModifier((CompoundTag) modifierelement));
+                }
+            }
+
+            return modifiers;
+        } else {
+            return null;
+        }
+    }
+    
+    public Item getItem(CompoundTag itemElement) {
+        Map<String, Tag> item = itemElement.getValue();
+        Byte count = getChildTag(item, "Count", ByteTag.class, Byte.class);
+        Byte slot = getChildTag(item, "Slot", ByteTag.class, Byte.class);
+        Short damage = getChildTag(item, "Damage", ShortTag.class, Short.class);
+        Short itemid = getChildTag(item, "id", ShortTag.class, Short.class);
+
+        ItemTag tag = getItemTag(item);
+        
+        return new Item(count, slot, damage, itemid, tag);
+    }
+    
+    public List<Item> getItems(Map<String, Tag> tileentity) {
+        List<?> itemsList = getChildTag(tileentity, "Items", ListTag.class, List.class);
+
+        if (itemsList != null) {
+            List<Item> items = new ArrayList<Item>();
+
+            for (Object itemElement : itemsList) {
+                if (itemElement instanceof CompoundTag) {
+                    items.add(getItem((CompoundTag) itemElement));
+                }
+            }
+
+            return items;
+        } else {
+            return null;
+        }
+    }
+    
+    public ItemTag getItemTag(Map<String, Tag> item) {
+        CompoundTag itemtagElement = getChildTag(item, "tag", CompoundTag.class);
+
+        if (itemtagElement != null) {
+            Map<String, Tag> itemtag = itemtagElement.getValue();
+            Integer repaircost = getChildTag(itemtag, "RepairCost", IntTag.class, Integer.class);
+            String author = getChildTag(itemtag, "author", StringTag.class, String.class);
+            String title = getChildTag(itemtag, "title", StringTag.class, String.class);
+            List<String> pages = convert(getChildTag(itemtag, "pages", ListTag.class, List.class), String.class);
+            Display display = getDisplay(itemtag);
+            List<Ench> enchants = getEnchant(itemtag);
+
+            return new ItemTag(repaircost, enchants, display, author, title, pages);
+        } else {
+            return null;
+        }
+    }
+    
+    public Display getDisplay(Map<String, Tag> itemtag) {
+        CompoundTag displayElement = getChildTag(itemtag, "display", CompoundTag.class);
+
+        if (displayElement != null) {
+            Map<String, Tag> display = displayElement.getValue();
+            String name = getChildTag(display, "Name", StringTag.class, String.class);
+            List<String> lore = convert(getChildTag(display, "Lore", ListTag.class, List.class), String.class);
+
+            return new Display(name, lore);
+        } else {
+            return null;
+        }
+    }
+    
+    public Ench getEnchant(CompoundTag enchantelement) {
+        Map<String, Tag> enchant = enchantelement.getValue();
+        Short id = getChildTag(enchant, "id", ShortTag.class, Short.class);
+        Short lvl = getChildTag(enchant, "lvl", ShortTag.class, Short.class);
+        return new Ench(id, lvl);
+    }
+    
+    public List<Ench> getEnchant(Map<String, Tag> enchanttag) {
+        List<?> enchantList = getChildTag(enchanttag, "ench", ListTag.class, List.class);
+
+        if (enchantList != null) {
+            List<Ench> enchants = new ArrayList<Ench>();
+
+            for (Object enchantelement : enchantList) {
+                if (enchantelement instanceof CompoundTag) {
+                    enchants.add(getEnchant((CompoundTag) enchantelement));
+                }
+            }
+
+            return enchants;
+        } else {
+            return null;
+        }
+    }
+    
+    public Equipment getEquipment(CompoundTag equipmentelement) {
+        Map<String, Tag> equipment = equipmentelement.getValue();
+        Byte count = getChildTag(equipment, "Count", ByteTag.class, Byte.class);
+        Short damage = getChildTag(equipment, "Damage", ShortTag.class, Short.class);
+        String id = getChildTag(equipment, "id", StringTag.class, String.class);
+        return new Equipment(count, damage, id);
+    }
+    
+    public List<Equipment> getEquipment(Map<String, Tag> entity) {
+        List<?> equipmentlist = getChildTag(entity, "Equipment", ListTag.class, List.class);
+
+        if (equipmentlist != null) {
+            List<Equipment> equipments = new ArrayList<Equipment>();
+
+            for (Object equipmentelement : equipmentlist) {
+                if (equipmentelement instanceof CompoundTag) {
+                    equipments.add(getEquipment((CompoundTag) equipmentelement));
+                }
+            }
+
+            return equipments;
+        } else {
+            return null;
+        }
+    }
+    
+    public Attribute getAttribute(CompoundTag attributeelement) {
+        Map<String, Tag> attribute = attributeelement.getValue();
+        Double base = getChildTag(attribute, "Base", DoubleTag.class, Double.class);
+        String name = getChildTag(attribute, "Name", StringTag.class, String.class);
+        List<Modifier> modifiers = getModifiers(attribute);      
+        return new Attribute(base, name, modifiers);
     }
 
-    private <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result) {
+    public List<Attribute> getAttributes(Map<String, Tag> entity) {
+        List<?> attributelist = getChildTag(entity, "Attributes", ListTag.class, List.class);
+
+        if (attributelist != null) {
+            List<Attribute> attributes = new ArrayList<Attribute>();
+
+            for (Object attributeelement : attributelist) {
+                if (attributeelement instanceof CompoundTag) {
+                    attributes.add(getAttribute((CompoundTag) attributeelement));
+                }
+            }
+
+            return attributes;
+        } else {
+            return null;
+        }
+    }
+    
+    public <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result) {
         if (!items.containsKey(key)) {
             return null;
         }
@@ -592,154 +777,6 @@ public class SchematicUtil {
                 newlist.add(convert(tag, expected));
             }
             return newlist;
-        } else {
-            return null;
-        }
-    }
-    
-    private List<Item> getItems(Map<String, Tag> tileentity) {
-        List<?> itemsList = getChildTag(tileentity, "Items", ListTag.class, List.class);
-
-        if (itemsList != null) {
-            List<Item> items = new ArrayList<Item>();
-
-            for (Object itemElement : itemsList) {
-                if (itemElement instanceof CompoundTag) {
-                    Map<String, Tag> item = ((CompoundTag) itemElement).getValue();
-                    Byte count = getChildTag(item, "Count", ByteTag.class, Byte.class);
-                    Byte slot = getChildTag(item, "Slot", ByteTag.class, Byte.class);
-                    Short damage = getChildTag(item, "Damage", ShortTag.class, Short.class);
-                    Short itemid = getChildTag(item, "id", ShortTag.class, Short.class);
-
-                    ItemTag tag = getItemTag(item);
-
-                    items.add(new Item(count, slot, damage, itemid, tag));
-                }
-            }
-
-            return items;
-        } else {
-            return null;
-        }
-    }
-    
-    private ItemTag getItemTag(Map<String, Tag> item) {
-        CompoundTag itemtagElement = getChildTag(item, "tag", CompoundTag.class);
-
-        if (itemtagElement != null) {
-            Map<String, Tag> itemtag = itemtagElement.getValue();
-            Integer repaircost = getChildTag(itemtag, "RepairCost", IntTag.class, Integer.class);
-            String author = getChildTag(itemtag, "author", StringTag.class, String.class);
-            String title = getChildTag(itemtag, "title", StringTag.class, String.class);
-            List<String> pages = convert(getChildTag(itemtag, "pages", ListTag.class, List.class), String.class);
-            Display display = getDisplay(itemtag);
-            List<Ench> enchants = getEnchant(itemtag);
-
-            return new ItemTag(repaircost, enchants, display, author, title, pages);
-        } else {
-            return null;
-        }
-    }
-    
-    private Display getDisplay(Map<String, Tag> itemtag) {
-        CompoundTag displayElement = getChildTag(itemtag, "display", CompoundTag.class);
-
-        if (displayElement != null) {
-            Map<String, Tag> display = displayElement.getValue();
-            String name = getChildTag(display, "Name", StringTag.class, String.class);
-            List<String> lore = convert(getChildTag(display, "Lore", ListTag.class, List.class), String.class);
-
-            return new Display(name, lore);
-        } else {
-            return null;
-        }
-    }
-    
-    private List<Ench> getEnchant(Map<String, Tag> enchanttag) {
-        List<?> enchantList = getChildTag(enchanttag, "ench", ListTag.class, List.class);
-
-        if (enchantList != null) {
-            List<Ench> enchants = new ArrayList<Ench>();
-
-            for (Object enchantelement : enchantList) {
-                if (enchantelement instanceof CompoundTag) {
-                    Map<String, Tag> enchant = ((CompoundTag) enchantelement).getValue();
-                    Short id = getChildTag(enchant, "id", ShortTag.class, Short.class);
-                    Short lvl = getChildTag(enchant, "lvl", ShortTag.class, Short.class);
-
-                    enchants.add(new Ench(id, lvl));
-                }
-            }
-
-            return enchants;
-        } else {
-            return null;
-        }
-    }
-    
-    private List<Equipment> getEquipment(Map<String, Tag> entity) {
-        List<?> equipmentlist = getChildTag(entity, "Equipment", ListTag.class, List.class);
-
-        if (equipmentlist != null) {
-            List<Equipment> equipments = new ArrayList<Equipment>();
-
-            for (Object equipmentelement : equipmentlist) {
-                if (equipmentelement instanceof CompoundTag) {
-                    Map<String, Tag> equipment = ((CompoundTag) equipmentelement).getValue();
-                    Byte count = getChildTag(equipment, "Count", ByteTag.class, Byte.class);
-                    Short damage = getChildTag(equipment, "Damage", ShortTag.class, Short.class);
-                    String id = getChildTag(equipment, "id", StringTag.class, String.class);
-                    equipments.add(new Equipment(count, damage, id));
-                }
-            }
-
-            return equipments;
-        } else {
-            return null;
-        }
-    }
-
-    private List<Attribute> getAttributes(Map<String, Tag> entity) {
-        List<?> attributelist = getChildTag(entity, "Attributes", ListTag.class, List.class);
-
-        if (attributelist != null) {
-            List<Attribute> attributes = new ArrayList<Attribute>();
-
-            for (Object attributeelement : attributelist) {
-                if (attributeelement instanceof CompoundTag) {
-                    Map<String, Tag> attribute = ((CompoundTag) attributeelement).getValue();
-                    Double base = getChildTag(attribute, "Base", DoubleTag.class, Double.class);
-                    String name = getChildTag(attribute, "Name", StringTag.class, String.class);
-                    List<Modifier> modifiers = getModifiers(attribute);                    
-                    
-                    attributes.add(new Attribute(base, name, modifiers));
-                }
-            }
-
-            return attributes;
-        } else {
-            return null;
-        }
-    }
-
-    private List<Modifier> getModifiers(Map<String, Tag> attribute) {
-        List<?> modifierlist = getChildTag(attribute, "Modifiers", ListTag.class, List.class);
-
-        if (modifierlist != null) {
-            List<Modifier> modifiers = new ArrayList<Modifier>();
-
-            for (Object modifierelement : modifierlist) {
-                if (modifierelement instanceof CompoundTag) {
-                    Map<String, Tag> modifier = ((CompoundTag) modifierelement).getValue();
-                    Integer operation = getChildTag(modifier, "Operation", IntTag.class, Integer.class);
-                    Double amount = getChildTag(modifier, "Amount", DoubleTag.class, Double.class);
-                    String name = getChildTag(modifier, "Name", StringTag.class, String.class); 
-                    
-                    modifiers.add(new Modifier(operation, amount, name));
-                }
-            }
-
-            return modifiers;
         } else {
             return null;
         }

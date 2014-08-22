@@ -17,8 +17,11 @@ public class Schematic extends AbstractSchematicElement {
     private List<TileEntity> tileentities;
     private String roomauthor;
     private Long checksum;
+    private Integer originx;
+    private Integer originy;
+    private Integer originz;
  
-    public Schematic(int[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum) {
+    public Schematic(int[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum, Integer originx, Integer originy, Integer originz) {
         this.blocks = blocks;
         this.data = data;
         this.biomes = biomes;
@@ -30,6 +33,9 @@ public class Schematic extends AbstractSchematicElement {
         this.tileentities = tileentities;
         this.roomauthor = roomauthor;
         this.checksum = checksum;
+        this.originx = originx;
+        this.originy = originy;
+        this.originz = originz;
     }
 
     public int[] getBlocks() {
@@ -76,6 +82,18 @@ public class Schematic extends AbstractSchematicElement {
         return checksum;
     }
     
+    public Integer getOriginX() {
+        return originx;
+    }
+    
+    public Integer getOriginY() {
+        return originy;
+    }
+    
+    public Integer getOriginZ() {
+        return originz;
+    }
+    
     public String toString() {
         return "{" + this.getClass().getName() + 
                 ": blocks=" + Sanitize(blocks) +
@@ -88,6 +106,9 @@ public class Schematic extends AbstractSchematicElement {
                 ", entities=" + Sanitize(entities) + 
                 ", tileentities=" + Sanitize(tileentities) + 
                 ", roomauthor=" + Sanitize(roomauthor) +
-                ", checksum=" + Sanitize(checksum) + "}";
+                ", checksum=" + Sanitize(checksum) + 
+                ", originx=" + Sanitize(originx) + 
+                ", originy=" + Sanitize(originy) +  
+                ", originz=" + Sanitize(originz) +  "}";
     }
 }

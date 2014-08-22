@@ -44,12 +44,13 @@ public class Entity extends AbstractSchematicElement {
     
     private Byte skeletontype;
     private Entity riding;
+    private Leash leash;
 
     public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, 
             Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Float> rotation,
             Byte canpickuploot, Byte color, Byte customnamevisible, Byte leashed, Byte persistencerequired, Byte sheared, Short attacktime, Short deathtime, 
             Short health, Short hurttime, Integer age, Integer inlove, Float absorptionamount, Float healf, String customname, List<Attribute> attributes, 
-            List<Float> dropchances, List<Equipment> equipments, Byte skeletontype, Entity riding) {
+            List<Float> dropchances, List<Equipment> equipments, Byte skeletontype, Entity riding, Leash leash) {
         this.dir = dir;
         this.direction = direction;
         this.invulnerable = invulnerable;
@@ -87,6 +88,7 @@ public class Entity extends AbstractSchematicElement {
         this.equipments = equipments;
         this.skeletontype = skeletontype;
         this.riding = riding;
+        this.leash = leash;
     }
 
     public Byte getDir() {
@@ -237,6 +239,10 @@ public class Entity extends AbstractSchematicElement {
         return riding;
     }
     
+    public Leash getLeash() {
+        return leash;
+    }
+    
     public String toString()
     {
     	return "{" + this.getClass().getName() + 
@@ -276,6 +282,7 @@ public class Entity extends AbstractSchematicElement {
                 ", dropchances=" + Sanitize(dropchances) + 
                 ", equipments=" + Sanitize(equipments) + 
                 ", skeletontype=" + Sanitize(skeletontype) +
-                ", riding=" + Sanitize(riding) + "}";
+                ", riding=" + Sanitize(riding) + 
+                ", leash=" + Sanitize(leash) + "}";
     }
 }
