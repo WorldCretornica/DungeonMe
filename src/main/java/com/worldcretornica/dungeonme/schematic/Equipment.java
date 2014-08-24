@@ -5,12 +5,14 @@ public class Equipment extends AbstractSchematicElement {
     private static final long serialVersionUID = 9193507742570437834L;
     private Byte count;
     private Short damage;
-    private String id;
+    private Short id;
+    private ItemTag itemtag;
     
-    public Equipment(Byte count, Short damage, String id) {
+    public Equipment(Byte count, Short damage, Short id, ItemTag itemtag) {
         this.count = count;
         this.damage = damage;
         this.id = id;
+        this.itemtag = itemtag;
     }
     
     public Byte getCount() {
@@ -21,8 +23,12 @@ public class Equipment extends AbstractSchematicElement {
         return damage;
     }
     
-    public String getId() {
+    public Short getId() {
         return id;
+    }
+    
+    public ItemTag getItemTag() {
+        return itemtag;
     }
     
     @Override
@@ -30,7 +36,8 @@ public class Equipment extends AbstractSchematicElement {
         return "{" + this.getClass().getName() + 
                 ": count=" + Sanitize(count) + 
                 ", damage=" + Sanitize(damage) +
-                ", id=" + Sanitize(id) + "}"; 
+                ", id=" + Sanitize(id) + 
+                ", itemtag=" + Sanitize(itemtag) + "}"; 
     }
 
 }

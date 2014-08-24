@@ -45,12 +45,15 @@ public class Entity extends AbstractSchematicElement {
     private Byte skeletontype;
     private Entity riding;
     private Leash leash;
+    
+    private Item item;
+    private Byte isbaby;
 
     public Entity(Byte dir, Byte direction, Byte invulnerable, Byte onground, Short air, Short fire, Integer dimension, Integer portalcooldown, Integer tilex, 
             Integer tiley, Integer tilez, Float falldistance, String id, String motive, List<Double> motion, List<Double> pos, List<Float> rotation,
             Byte canpickuploot, Byte color, Byte customnamevisible, Byte leashed, Byte persistencerequired, Byte sheared, Short attacktime, Short deathtime, 
             Short health, Short hurttime, Integer age, Integer inlove, Float absorptionamount, Float healf, String customname, List<Attribute> attributes, 
-            List<Float> dropchances, List<Equipment> equipments, Byte skeletontype, Entity riding, Leash leash) {
+            List<Float> dropchances, List<Equipment> equipments, Byte skeletontype, Entity riding, Leash leash, Item item, Byte isbaby) {
         this.dir = dir;
         this.direction = direction;
         this.invulnerable = invulnerable;
@@ -89,6 +92,8 @@ public class Entity extends AbstractSchematicElement {
         this.skeletontype = skeletontype;
         this.riding = riding;
         this.leash = leash;
+        this.item = item;
+        this.isbaby = isbaby;
     }
 
     public Byte getDir() {
@@ -243,6 +248,14 @@ public class Entity extends AbstractSchematicElement {
         return leash;
     }
     
+    public Item getItem() {
+        return item;
+    }
+    
+    public Byte getIsBaby() {
+        return isbaby;
+    }
+    
     public String toString()
     {
     	return "{" + this.getClass().getName() + 
@@ -283,6 +296,8 @@ public class Entity extends AbstractSchematicElement {
                 ", equipments=" + Sanitize(equipments) + 
                 ", skeletontype=" + Sanitize(skeletontype) +
                 ", riding=" + Sanitize(riding) + 
-                ", leash=" + Sanitize(leash) + "}";
+                ", leash=" + Sanitize(leash) + 
+                ", item=" + Sanitize(item) + 
+                ", isbaby=" + Sanitize(isbaby) + "}";
     }
 }

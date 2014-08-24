@@ -11,8 +11,10 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -30,9 +32,15 @@ import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LeashHitch;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.wrappers.nbt.*;
@@ -92,6 +100,13 @@ public class SchematicUtil {
         Short height = schematic.getHeight();
         List<Entity> entities = schematic.getEntities();
         List<TileEntity> tileentities = schematic.getTileEntities();
+        Integer originX = schematic.getOriginX();
+        Integer originY = schematic.getOriginY();
+        Integer originZ = schematic.getOriginZ();
+        
+        if (originX == null) originX = 0;
+        if (originY == null) originY = 0;
+        if (originZ == null) originZ = 0;
 
         for (int x = 0; x < width; ++x) {
             for (int y = 0; y < height; ++y) {
@@ -108,18 +123,14 @@ public class SchematicUtil {
                 }
             }
         }
-
+        
         try {
             for (Entity e : entities) {
-                EntityType et = EntityType.fromName(e.getId());
-
-                if (et != null) {
-                    //TODO
-                    //world.spawnEntity(new Location(world, e.getTileX() + loc.getX(), e.getTileY() + loc.getY(), e.getTileZ() + loc.getZ()), et);
-                }
+                createEntity(e, loc, originX, originY, originZ);
             }
         } catch (Exception e) {
-            plugin.getLogger().warning("err:" + e.getMessage());
+            //plugin.getLogger().warning("err:" + e.getMessage());
+            e.printStackTrace();
         }
 
         
@@ -254,83 +265,290 @@ public class SchematicUtil {
 
                 for (Item item : items) {
 
-                    ItemStack is = new ItemStack(item.getId(), item.getCount());
-                    is = MinecraftReflection.getBukkitItemStack(is);
-                    ItemTag itemtag = item.getTag();
-
-                    if (itemtag != null) {
-
-                        List<Ench> enchants = itemtag.getEnchants();
-                        Integer repaircost = itemtag.getRepairCost();
-                        List<String> pages = itemtag.getPages();
-                        String author = itemtag.getAuthor();
-                        String title = itemtag.getTitle();
-                        NbtCompound compound = NbtFactory.ofCompound("null");
-
-                        // Display
-                        if (itemtag.getDisplay() != null) {
-
-                            Display display = itemtag.getDisplay();
-                            List<String> lores = display.getLore();
-                            String name = display.getName();
-
-                            NbtCompound displaycompound = NbtFactory.ofCompound("display");
-
-                            if (name != null) {
-                                NbtBase<String> namecompound = NbtFactory.of("Name", name);
-                                displaycompound.put(namecompound);
-                            }
-
-                            if (lores != null) {
-                                displaycompound.put("Lore", NbtFactory.ofList("Lore", lores));
-                            }
-
-                            compound.put(displaycompound);
-                        }
-
-                        // Enchants
-                        if (enchants != null) {
-                            @SuppressWarnings("unchecked")
-                            NbtList<Map<String, NbtBase<?>>> nbtL = NbtFactory.ofList("ench");
-
-                            for (Ench enchant : enchants) {
-                                NbtCompound enchantcompound = NbtFactory.ofCompound("");
-                                enchantcompound.put("id", enchant.getId());
-                                enchantcompound.put("lvl", enchant.getLvl());
-                                nbtL.add(enchantcompound);
-                            }
-
-                            compound.put("ench", nbtL);
-                        }
-
-                        // Pages
-                        if (pages != null) {
-                            compound.put("pages", NbtFactory.ofList("pages", pages));
-                        }
-
-                        // RepairCost
-                        if (repaircost != null) {
-                            compound.put(NbtFactory.of("RepairCost", repaircost));
-                        }
-
-                        // Author
-                        if (author != null) {
-                            compound.put(NbtFactory.of("author", author));
-                        }
-
-                        // Title
-                        if (title != null) {
-                            compound.put(NbtFactory.of("title", title));
-                        }
-
-                        NbtFactory.setItemTag(is, compound);
-                    }
+                    ItemStack is = getItemStack(item);
 
                     inventory.setItem(item.getSlot(), is);
                 }
             }
         }
     }
+
+    @SuppressWarnings("deprecation")
+    private ItemStack getItemStack(Item item) {
+        ItemStack is = new ItemStack(item.getId(), item.getCount());
+        is = MinecraftReflection.getBukkitItemStack(is);
+        ItemTag itemtag = item.getTag();
+
+        if (itemtag != null) {
+            setTag(is, itemtag);
+        }
+        
+        return is;
+    }
+
+    private void setTag(ItemStack is, ItemTag itemtag) {
+        List<Ench> enchants = itemtag.getEnchants();
+        Integer repaircost = itemtag.getRepairCost();
+        List<String> pages = itemtag.getPages();
+        String author = itemtag.getAuthor();
+        String title = itemtag.getTitle();
+        NbtCompound compound = NbtFactory.ofCompound("null");
+
+        // Display
+        if (itemtag.getDisplay() != null) {
+
+            Display display = itemtag.getDisplay();
+            List<String> lores = display.getLore();
+            String name = display.getName();
+
+            NbtCompound displaycompound = NbtFactory.ofCompound("display");
+
+            if (name != null) {
+                NbtBase<String> namecompound = NbtFactory.of("Name", name);
+                displaycompound.put(namecompound);
+            }
+
+            if (lores != null) {
+                displaycompound.put("Lore", NbtFactory.ofList("Lore", lores));
+            }
+
+            compound.put(displaycompound);
+        }
+
+        // Enchants
+        if (enchants != null) {
+            @SuppressWarnings("unchecked")
+            NbtList<Map<String, NbtBase<?>>> nbtL = NbtFactory.ofList("ench");
+
+            for (Ench enchant : enchants) {
+                NbtCompound enchantcompound = NbtFactory.ofCompound("");
+                enchantcompound.put("id", enchant.getId());
+                enchantcompound.put("lvl", enchant.getLvl());
+                nbtL.add(enchantcompound);
+            }
+
+            compound.put("ench", nbtL);
+        }
+
+        // Pages
+        if (pages != null) {
+            compound.put("pages", NbtFactory.ofList("pages", pages));
+        }
+
+        // RepairCost
+        if (repaircost != null) {
+            compound.put(NbtFactory.of("RepairCost", repaircost));
+        }
+
+        // Author
+        if (author != null) {
+            compound.put(NbtFactory.of("author", author));
+        }
+
+        // Title
+        if (title != null) {
+            compound.put(NbtFactory.of("title", title));
+        }
+
+        NbtFactory.setItemTag(is, compound);
+    }
+
+    @SuppressWarnings("deprecation")
+    private org.bukkit.entity.Entity createEntity(Entity e, Location loc, int originX, int originY, int originZ) {
+        EntityType entitytype = EntityType.fromName(e.getId());
+        World world = loc.getWorld();
+
+        org.bukkit.entity.Entity ent = null;
+        
+        if (entitytype != null && e.getPos() != null && e.getPos().size() == 3) {
+            List<Double> positions = e.getPos();
+            
+            double x = positions.get(0) - originX;
+            double y = positions.get(1) - originY;
+            double z = positions.get(2) - originZ;
+            
+            //Set properties
+            Byte dir = e.getDir();
+            Byte direction = e.getDirection();
+            Byte invulnerable = e.getInvulnerable();
+            Byte onground = e.getOnGround();
+            Short air = e.getAir();
+            Short fire = e.getFire();
+            Integer dimension = e.getDimension();
+            Integer portalcooldown = e.getPortalCooldown();
+            Integer tilex = e.getTileX();
+            Integer tiley = e.getTileY();
+            Integer tilez = e.getTileZ();
+            Float falldistance = e.getFallDistance();
+            String id = e.getId();
+            String motive = e.getMotive();
+            List<Double> motion = e.getMotion();
+            List<Float> rotation = e.getRotation();
+            Byte canpickuploot = e.getCanPickupLoot();
+            Byte color = e.getColor();
+            Byte customnamevisible = e.getCustomNameVisible();
+            //Byte leashed = e.getLeashed();
+            Byte persistencerequired = e.getPersistenceRequired();
+            Byte sheared = e.getSheared();
+            Short attacktime = e.getAttackTime();
+            Short deathtime = e.getDeathTime();
+            Short health = e.getHealth();
+            Short hurttime = e.getHurtTime();
+            Integer age = e.getAge();
+            Integer inlove = e.getInLove();
+            Float absorptionamount = e.getAbsorptionAmount();
+            Float healf = e.getHealF();
+            String customname = e.getCustomName();
+            List<Attribute> attributes = e.getAttributes();
+            List<Float> dropchances = e.getDropChances();
+            List<Equipment> equipments = e.getEquipments();
+            Byte skeletontype = e.getSkeletonType();
+            Entity riding = e.getRiding();
+            Leash leash = e.getLeash();
+            Item item = e.getItem();
+            Byte isbaby = e.getIsBaby();
+            
+            Location etloc = new Location(world, x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ());
+            
+            if (entitytype == EntityType.ITEM_FRAME) {
+                etloc.setX(Math.floor(etloc.getX()));
+                etloc.setY(Math.floor(etloc.getY()));
+                etloc.setZ(Math.floor(etloc.getZ()));
+                ent = world.spawnEntity(etloc, entitytype);
+            } else if (entitytype == EntityType.PAINTING) {
+                etloc.setX(Math.floor(etloc.getX()));
+                etloc.setY(Math.floor(etloc.getY()));
+                etloc.setZ(Math.floor(etloc.getZ()));
+                
+                ent = world.spawnEntity(etloc, entitytype);
+            } else if (entitytype == EntityType.LEASH_HITCH) {                        
+                /*etloc.setX(Math.floor(etloc.getX()));
+                etloc.setY(Math.floor(etloc.getY()));
+                etloc.setZ(Math.floor(etloc.getZ()));
+                
+                ent = world.spawnEntity(etloc, entitytype);*/
+                return null;
+            } else if (entitytype == EntityType.DROPPED_ITEM) {
+                if (item == null) {
+                    return null;
+                } else {
+                    ItemStack is = new ItemStack(item.getId(), item.getCount());
+                    is = MinecraftReflection.getBukkitItemStack(is);
+                    ItemTag itemtag = item.getTag();
+
+                    if (itemtag != null) {
+                        setTag(is, itemtag);
+                    }
+                    
+                    ent = world.dropItem(etloc, is);
+                }
+            } else {
+                ent = world.spawnEntity(etloc, entitytype);
+            }
+            
+            
+            if (riding != null)             ent.setPassenger(createEntity(riding, loc, originX, originY, originZ));
+            if (falldistance != null)       ent.setFallDistance(falldistance);
+            if (fire != null)               ent.setFireTicks(fire);
+            if (age != null && age >= 1)    ent.setTicksLived(age);
+            
+            if (motion != null && motion.size() == 3) {
+                Vector velocity = new Vector(motion.get(0), motion.get(1), motion.get(2));
+                ent.setVelocity(velocity);
+            }
+            
+            if (ent instanceof LivingEntity) {
+                LivingEntity livingentity = (LivingEntity) ent;
+                
+                if (canpickuploot != null)      livingentity.setCanPickupItems(canpickuploot != 0);
+                if (customname != null)         livingentity.setCustomName(customname);
+                if (customnamevisible != null)  livingentity.setCustomNameVisible(customnamevisible != 0);
+                if (health != null)             livingentity.setHealth(health);
+                //TODO figure out setMaxHealth()
+                if (air != null)                livingentity.setRemainingAir(air);
+                if (persistencerequired != null) livingentity.setRemoveWhenFarAway(persistencerequired == 0);
+                if (leash != null) {
+                    org.bukkit.entity.Entity leashentity = getLeash(leash, loc, originX, originY, originZ);
+                    if (leashentity != null) {
+                        livingentity.setLeashHolder(leashentity);
+                    }
+                }
+
+                EntityEquipment entityequipment = livingentity.getEquipment();
+                Set<ItemStack> newitems = new HashSet<>();
+                
+                if (equipments != null && equipments.size() > 0) {
+                    for(Equipment equipitem : equipments) {
+                        if (equipitem != null && equipitem.getId() != null && equipitem.getCount() != null) {
+                            ItemStack is = new ItemStack(equipitem.getId(), equipitem.getCount());
+                            is = MinecraftReflection.getBukkitItemStack(is);
+                            ItemTag itemtag = equipitem.getItemTag();
+    
+                            if (itemtag != null) {
+                                setTag(is, itemtag);
+                            }
+                            
+                            newitems.add(is);
+                        }
+                    }
+                }
+                
+                entityequipment.setArmorContents(newitems.toArray(new ItemStack[5]));
+               
+                
+                if (livingentity instanceof Skeleton && skeletontype != null) {
+                    Skeleton skeleton = (Skeleton) livingentity;
+                    SkeletonType st = SkeletonType.getType(skeletontype);
+                    skeleton.setSkeletonType(st);
+                }                
+            }
+        }
+        
+        if (ent == null) {
+            plugin.getLogger().info("null entity");
+        }
+        
+        return ent;
+    }
+    
+    
+    private org.bukkit.entity.Entity getLeash(Leash leash, Location loc, int originX, int originY, int originZ) {
+        org.bukkit.entity.Entity ent = null;
+        World world = loc.getWorld();
+        
+        int x = leash.getX() - originX;
+        int y = leash.getY() - originY;
+        int z = leash.getZ() - originZ;
+        
+        Location etloc = new Location(world, x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ());
+        
+        Block block = world.getBlockAt(etloc);
+        
+        if (block.getType() == Material.FENCE || block.getType() == Material.NETHER_FENCE) {
+            etloc.setX(Math.floor(etloc.getX()));
+            etloc.setY(Math.floor(etloc.getY()));
+            etloc.setZ(Math.floor(etloc.getZ()));
+            
+            ent = world.spawnEntity(etloc, EntityType.LEASH_HITCH);
+            
+            List<org.bukkit.entity.Entity> nearbyentities = ent.getNearbyEntities(1, 1, 1);
+            
+            for(org.bukkit.entity.Entity nearby : nearbyentities) {
+                if (nearby instanceof LeashHitch) {
+                    if (nearby.getLocation().distance(ent.getLocation()) == 0) {
+                        ent.remove();
+                        return nearby;
+                    }
+                }
+            }
+        }
+        
+        return ent;
+    }
+    
+    
+    
+    
 
     public Schematic loadCompiledSchematic(String file, long checksum) {
         Schematic schem = null;
@@ -526,7 +744,17 @@ public class SchematicUtil {
         Short deathtime = getChildTag(entity, "DeathTime", ShortTag.class, Short.class);
         Short health = getChildTag(entity, "Health", ShortTag.class, Short.class);
         Short hurttime = getChildTag(entity, "HurtTime", ShortTag.class, Short.class);
-        Integer age = getChildTag(entity, "Age", IntTag.class, Integer.class);
+        Integer age = null;
+        
+        try {
+            age = getChildTag(entity, "Age", IntTag.class, Integer.class);
+        }catch(IllegalArgumentException e) {
+            Short shortAge = getChildTag(entity, "Age", ShortTag.class, Short.class);
+            
+            if (shortAge != null)
+            age = shortAge.intValue();
+        }
+        
         Integer inlove = getChildTag(entity, "InLove", IntTag.class, Integer.class);
         Float absorptionamount= getChildTag(entity, "AbsorptionAmount", FloatTag.class, Float.class);
         Float healf= getChildTag(entity, "HealF", FloatTag.class, Float.class);
@@ -536,6 +764,14 @@ public class SchematicUtil {
         List<Equipment> equipments = getEquipment(entity);
         
         Byte skeletontype = getChildTag(entity, "SkeletonType", ByteTag.class, Byte.class);
+        
+        Item item = null;
+        CompoundTag itemtag = getChildTag(entity, "Item", CompoundTag.class);
+        if (itemtag != null) {
+            item = getItem(itemtag);
+        }
+        
+        Byte isbaby = getChildTag(entity, "IsBaby", ByteTag.class, Byte.class);
         
         Entity riding = null;
         
@@ -551,7 +787,7 @@ public class SchematicUtil {
                                   
         return new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
                 canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
-                healf, customname, attributes, dropchances, equipments, skeletontype, riding, leash);
+                healf, customname, attributes, dropchances, equipments, skeletontype, riding, leash, item, isbaby);
     }
     
     public Leash getLeash(CompoundTag leashelement) {
@@ -681,8 +917,11 @@ public class SchematicUtil {
         Map<String, Tag> equipment = equipmentelement.getValue();
         Byte count = getChildTag(equipment, "Count", ByteTag.class, Byte.class);
         Short damage = getChildTag(equipment, "Damage", ShortTag.class, Short.class);
-        String id = getChildTag(equipment, "id", StringTag.class, String.class);
-        return new Equipment(count, damage, id);
+        Short id = getChildTag(equipment, "id", ShortTag.class, Short.class);
+        
+        ItemTag itemtag = getItemTag(equipment);
+        
+        return new Equipment(count, damage, id, itemtag);
     }
     
     public List<Equipment> getEquipment(Map<String, Tag> entity) {
@@ -735,7 +974,7 @@ public class SchematicUtil {
         }
         Tag tag = items.get(key);
         if (!expected.isInstance(tag)) {
-            throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName());
+            throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName() + System.lineSeparator() + "tag is: " + tag.toString());
         }
         Object obj = expected.cast(tag).getValue();
         if (!result.isInstance(obj)) {
@@ -750,7 +989,7 @@ public class SchematicUtil {
         }
         Tag tag = items.get(key);
         if (!expected.isInstance(tag)) {
-            throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName());
+            throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName() + System.lineSeparator() + "tag is: " + tag.toString());
         }
         return expected.cast(tag);
     }
@@ -763,7 +1002,7 @@ public class SchematicUtil {
             Tag tag = (Tag) obj;
 
             if (!expected.isInstance(tag.getValue())) {
-                throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName());
+                throw new IllegalArgumentException(tag.getName() + " tag is not of tag type " + expected.getName() + System.lineSeparator() + "tag is: " + tag.toString());
             }
 
             return expected.cast(tag.getValue());
