@@ -27,7 +27,7 @@ public class Equipment extends AbstractSchematicElement {
         return id;
     }
     
-    public ItemTag getItemTag() {
+    public ItemTag getTag() {
         return itemtag;
     }
     

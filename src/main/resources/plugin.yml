@@ -3,7 +3,6 @@ main: com.worldcretornica.dungeonme.DungeonMe
 version: ${project.version}
 author: ZachBora
 load: startup
-depend: [ProtocolLib]
 description: >
              Infinite Dungeon Generator
 commands:

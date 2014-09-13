@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Rotation;
 import org.bukkit.SkullType;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -31,19 +32,24 @@ import org.bukkit.block.Jukebox;
 import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.block.Skull;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.minecart.PoweredMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
-import com.comphenix.protocol.utility.MinecraftReflection;
-import com.comphenix.protocol.wrappers.nbt.*;
 import com.google.common.io.Files;
 import com.worldcretornica.dungeonme.jnbt.*;
 import com.worldcretornica.dungeonme.schematic.*;
@@ -148,63 +154,41 @@ public class SchematicUtil {
             // Short spawncount = te.getSpawnCount();
             // Short spawnrange = te.getSpawnRange();
             // String customname = te.getCustomName();
+            
+            // Comparator
+            // Integer outputsignal = te.getOutputSignal();
+            
+            // Hopper
+            // Integer transfercooldown = te.getTransferCooldown();
+            
+            // Beacon
+            // Integer levels = te.getLevels();
+            // Integer primary = te.getPrimary();
+            // Integer secondary = te.getSecondary();
 
             BlockState bs = block.getState();
 
             if (bs instanceof Skull) {
                 Skull skull = (Skull) bs;
 
-                BlockFace bf = null;
-                switch (te.getRot()) {
-                case 0:
-                    bf = BlockFace.NORTH;
-                    break;
-                case 1:
-                    bf = BlockFace.NORTH_NORTH_EAST;
-                    break;
-                case 2:
-                    bf = BlockFace.NORTH_EAST;
-                    break;
-                case 3:
-                    bf = BlockFace.EAST_NORTH_EAST;
-                    break;
-                case 4:
-                    bf = BlockFace.EAST;
-                    break;
-                case 5:
-                    bf = BlockFace.EAST_SOUTH_EAST;
-                    break;
-                case 6:
-                    bf = BlockFace.SOUTH_EAST;
-                    break;
-                case 7:
-                    bf = BlockFace.SOUTH_SOUTH_EAST;
-                    break;
-                case 8:
-                    bf = BlockFace.SOUTH;
-                    break;
-                case 9:
-                    bf = BlockFace.SOUTH_SOUTH_WEST;
-                    break;
-                case 10:
-                    bf = BlockFace.SOUTH_WEST;
-                    break;
-                case 11:
-                    bf = BlockFace.WEST_SOUTH_WEST;
-                    break;
-                case 12:
-                    bf = BlockFace.WEST;
-                    break;
-                case 13:
-                    bf = BlockFace.WEST_NORTH_WEST;
-                    break;
-                case 14:
-                    bf = BlockFace.NORTH_WEST;
-                    break;
-                case 15:
-                    bf = BlockFace.NORTH_NORTH_WEST;
-                    break;
-                }
+                BlockFace bf = BlockFace.NORTH;
+                Byte rot = te.getRot();
+                if (rot == 0) bf = BlockFace.NORTH;
+                else if (rot == 1) bf = BlockFace.NORTH_NORTH_EAST;
+                else if (rot == 2) bf = BlockFace.NORTH_EAST;
+                else if (rot == 3) bf = BlockFace.EAST_NORTH_EAST;
+                else if (rot == 4) bf = BlockFace.EAST;
+                else if (rot == 5) bf = BlockFace.EAST_SOUTH_EAST;
+                else if (rot == 6) bf = BlockFace.SOUTH_EAST;
+                else if (rot == 7) bf = BlockFace.SOUTH_SOUTH_EAST;
+                else if (rot == 8) bf = BlockFace.SOUTH;
+                else if (rot == 9) bf = BlockFace.SOUTH_SOUTH_WEST;
+                else if (rot == 10) bf = BlockFace.SOUTH_WEST;
+                else if (rot == 11) bf = BlockFace.WEST_SOUTH_WEST;
+                else if (rot == 12) bf = BlockFace.WEST;
+                else if (rot == 13) bf = BlockFace.WEST_NORTH_WEST;
+                else if (rot == 14) bf = BlockFace.NORTH_WEST;
+                else if (rot == 15) bf = BlockFace.NORTH_NORTH_WEST;
 
                 skull.setSkullType(SkullType.values()[te.getSkullType()]);
                 skull.setRotation(bf);
@@ -276,7 +260,6 @@ public class SchematicUtil {
     @SuppressWarnings("deprecation")
     private ItemStack getItemStack(Item item) {
         ItemStack is = new ItemStack(item.getId(), item.getCount());
-        is = MinecraftReflection.getBukkitItemStack(is);
         ItemTag itemtag = item.getTag();
 
         if (itemtag != null) {
@@ -286,74 +269,41 @@ public class SchematicUtil {
         return is;
     }
 
+    @SuppressWarnings("deprecation")
     private void setTag(ItemStack is, ItemTag itemtag) {
         List<Ench> enchants = itemtag.getEnchants();
-        Integer repaircost = itemtag.getRepairCost();
+        //Integer repaircost = itemtag.getRepairCost();
         List<String> pages = itemtag.getPages();
         String author = itemtag.getAuthor();
         String title = itemtag.getTitle();
-        NbtCompound compound = NbtFactory.ofCompound("null");
-
-        // Display
-        if (itemtag.getDisplay() != null) {
-
-            Display display = itemtag.getDisplay();
-            List<String> lores = display.getLore();
-            String name = display.getName();
-
-            NbtCompound displaycompound = NbtFactory.ofCompound("display");
-
-            if (name != null) {
-                NbtBase<String> namecompound = NbtFactory.of("Name", name);
-                displaycompound.put(namecompound);
-            }
-
-            if (lores != null) {
-                displaycompound.put("Lore", NbtFactory.ofList("Lore", lores));
-            }
-
-            compound.put(displaycompound);
+        Display display = itemtag.getDisplay();
+        List<String> lores = display.getLore();
+        String name = display.getName();
+        
+        ItemMeta itemmeta = is.getItemMeta();
+        
+        itemmeta.setLore(lores);
+        itemmeta.setDisplayName(name);
+        
+        if (itemmeta instanceof BookMeta) {
+            BookMeta bookmeta = (BookMeta) itemmeta;
+            bookmeta.setAuthor(author);
+            bookmeta.setTitle(title);
+            bookmeta.setPages(pages);
         }
-
-        // Enchants
-        if (enchants != null) {
-            @SuppressWarnings("unchecked")
-            NbtList<Map<String, NbtBase<?>>> nbtL = NbtFactory.ofList("ench");
-
+        
+        if (itemmeta instanceof EnchantmentStorageMeta) {
+            EnchantmentStorageMeta enchantmentstoragemeta = (EnchantmentStorageMeta) itemmeta;
+            
             for (Ench enchant : enchants) {
-                NbtCompound enchantcompound = NbtFactory.ofCompound("");
-                enchantcompound.put("id", enchant.getId());
-                enchantcompound.put("lvl", enchant.getLvl());
-                nbtL.add(enchantcompound);
+                enchantmentstoragemeta.addEnchant(Enchantment.getById(enchant.getId()), enchant.getLvl(), true);
             }
-
-            compound.put("ench", nbtL);
         }
-
-        // Pages
-        if (pages != null) {
-            compound.put("pages", NbtFactory.ofList("pages", pages));
-        }
-
-        // RepairCost
-        if (repaircost != null) {
-            compound.put(NbtFactory.of("RepairCost", repaircost));
-        }
-
-        // Author
-        if (author != null) {
-            compound.put(NbtFactory.of("author", author));
-        }
-
-        // Title
-        if (title != null) {
-            compound.put(NbtFactory.of("title", title));
-        }
-
-        NbtFactory.setItemTag(is, compound);
+        
+        is.setItemMeta(itemmeta);
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({ "deprecation", "unused" })
     private org.bukkit.entity.Entity createEntity(Entity e, Location loc, int originX, int originY, int originZ) {
         EntityType entitytype = EntityType.fromName(e.getId());
         World world = loc.getWorld();
@@ -372,41 +322,58 @@ public class SchematicUtil {
             Byte direction = e.getDirection();
             Byte invulnerable = e.getInvulnerable();
             Byte onground = e.getOnGround();
-            Short air = e.getAir();
-            Short fire = e.getFire();
-            Integer dimension = e.getDimension();
-            Integer portalcooldown = e.getPortalCooldown();
-            Integer tilex = e.getTileX();
-            Integer tiley = e.getTileY();
-            Integer tilez = e.getTileZ();
-            Float falldistance = e.getFallDistance();
-            String id = e.getId();
-            String motive = e.getMotive();
-            List<Double> motion = e.getMotion();
-            List<Float> rotation = e.getRotation();
             Byte canpickuploot = e.getCanPickupLoot();
             Byte color = e.getColor();
             Byte customnamevisible = e.getCustomNameVisible();
             //Byte leashed = e.getLeashed();
             Byte persistencerequired = e.getPersistenceRequired();
             Byte sheared = e.getSheared();
+            Byte skeletontype = e.getSkeletonType();
+            Byte isbaby = e.getIsBaby();
+            Byte itemrotation = e.getItemRotation();
+            
+            //Double pushx = e.getPushX();
+            //Double pushz = e.getPushZ();
+            
+            Entity riding = e.getRiding();
+            
+            Float falldistance = e.getFallDistance();
+            Float absorptionamount = e.getAbsorptionAmount();
+            Float healf = e.getHealF();
+            Float itemdropchance = e.getItemDropChance();
+            
+            Integer dimension = e.getDimension();
+            Integer portalcooldown = e.getPortalCooldown();
+            Integer tilex = e.getTileX();
+            Integer tiley = e.getTileY();
+            Integer tilez = e.getTileZ();
+            Integer age = e.getAge();
+            Integer inlove = e.getInLove();
+            //Integer transfercooldown = e.getTransferCooldown();
+            //Integer tntfuse = e.getTNTFuse();
+            
+            Item item = e.getItem();
+            
+            Leash leash = e.getLeash();
+            
+            Short air = e.getAir();
+            Short fire = e.getFire();
             Short attacktime = e.getAttackTime();
             Short deathtime = e.getDeathTime();
             Short health = e.getHealth();
             Short hurttime = e.getHurtTime();
-            Integer age = e.getAge();
-            Integer inlove = e.getInLove();
-            Float absorptionamount = e.getAbsorptionAmount();
-            Float healf = e.getHealF();
+            //Short fuel = e.getFuel()
+            
+            String id = e.getId();
+            String motive = e.getMotive();
             String customname = e.getCustomName();
+            
+            List<Double> motion = e.getMotion();
+            List<Float> rotation = e.getRotation();
             List<Attribute> attributes = e.getAttributes();
             List<Float> dropchances = e.getDropChances();
             List<Equipment> equipments = e.getEquipments();
-            Byte skeletontype = e.getSkeletonType();
-            Entity riding = e.getRiding();
-            Leash leash = e.getLeash();
-            Item item = e.getItem();
-            Byte isbaby = e.getIsBaby();
+            List<Item> items = e.getItems();
             
             Location etloc = new Location(world, x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ());
             
@@ -433,7 +400,6 @@ public class SchematicUtil {
                     return null;
                 } else {
                     ItemStack is = new ItemStack(item.getId(), item.getCount());
-                    is = MinecraftReflection.getBukkitItemStack(is);
                     ItemTag itemtag = item.getTag();
 
                     if (itemtag != null) {
@@ -457,6 +423,41 @@ public class SchematicUtil {
                 ent.setVelocity(velocity);
             }
             
+            if (ent instanceof InventoryHolder) {
+                InventoryHolder ih = (InventoryHolder) ent;
+                
+                Set<ItemStack> newitems = new HashSet<>();
+                
+                if (items != null && !items.isEmpty()) {
+                    for (Item newitem : items) {
+                        ItemStack is = new ItemStack(newitem.getId(), newitem.getCount());
+                        ItemTag itemtag = newitem.getTag();
+
+                        if (itemtag != null) {
+                            setTag(is, itemtag);
+                        }
+                        
+                        newitems.add(is);
+                    }
+                }
+                
+                ih.getInventory().setContents(newitems.toArray(new ItemStack[newitems.size()]));
+            }
+            
+            if (ent instanceof ItemFrame) {
+                ItemFrame itemframe = (ItemFrame) ent;
+                itemframe.setRotation(Rotation.values()[itemrotation]);
+                
+                ItemStack is = new ItemStack(item.getId(), item.getCount());
+                ItemTag itemtag = item.getTag();
+
+                if (itemtag != null) {
+                    setTag(is, itemtag);
+                }
+                
+                itemframe.setItem(is);
+            }
+            
             if (ent instanceof LivingEntity) {
                 LivingEntity livingentity = (LivingEntity) ent;
                 
@@ -464,7 +465,7 @@ public class SchematicUtil {
                 if (customname != null)         livingentity.setCustomName(customname);
                 if (customnamevisible != null)  livingentity.setCustomNameVisible(customnamevisible != 0);
                 if (health != null)             livingentity.setHealth(health);
-                //TODO figure out setMaxHealth()
+                if (healf != null)              livingentity.setMaxHealth(healf);
                 if (air != null)                livingentity.setRemainingAir(air);
                 if (persistencerequired != null) livingentity.setRemoveWhenFarAway(persistencerequired == 0);
                 if (leash != null) {
@@ -477,12 +478,11 @@ public class SchematicUtil {
                 EntityEquipment entityequipment = livingentity.getEquipment();
                 Set<ItemStack> newitems = new HashSet<>();
                 
-                if (equipments != null && equipments.size() > 0) {
+                if (equipments != null && !equipments.isEmpty()) {
                     for(Equipment equipitem : equipments) {
                         if (equipitem != null && equipitem.getId() != null && equipitem.getCount() != null) {
                             ItemStack is = new ItemStack(equipitem.getId(), equipitem.getCount());
-                            is = MinecraftReflection.getBukkitItemStack(is);
-                            ItemTag itemtag = equipitem.getItemTag();
+                            ItemTag itemtag = equipitem.getTag();
     
                             if (itemtag != null) {
                                 setTag(is, itemtag);
@@ -492,15 +492,14 @@ public class SchematicUtil {
                         }
                     }
                 }
-                
-                entityequipment.setArmorContents(newitems.toArray(new ItemStack[5]));
-               
-                
+
+                entityequipment.setArmorContents(newitems.toArray(new ItemStack[5]));               
+
                 if (livingentity instanceof Skeleton && skeletontype != null) {
                     Skeleton skeleton = (Skeleton) livingentity;
                     SkeletonType st = SkeletonType.getType(skeletontype);
                     skeleton.setSkeletonType(st);
-                }                
+                }
             }
         }
         
@@ -545,10 +544,6 @@ public class SchematicUtil {
         
         return ent;
     }
-    
-    
-    
-    
 
     public Schematic loadCompiledSchematic(String file, long checksum) {
         Schematic schem = null;
@@ -621,10 +616,9 @@ public class SchematicUtil {
                 int[] blocks = new int[rawblocks.length];
                 
                 for(int ctr = 0; ctr < rawblocks.length; ctr++) {
-                    int blockid = rawblocks[ctr];
+                    int blockid = rawblocks[ctr] & 0xff;
                     
-                    if(blockid < 0) 
-                        blockid = 256 + blockid;
+                    //if(blockid < 0) blockid = 256 + blockid;
                     
                     blocks[ctr] = blockid;
                 }
@@ -658,16 +652,23 @@ public class SchematicUtil {
                     for (Object entityElement : tileentitiesList) {
                         if (entityElement instanceof CompoundTag) {
                             Map<String, Tag> tileentity = ((CompoundTag) entityElement).getValue();
-                            Integer x = getChildTag(tileentity, "x", IntTag.class, Integer.class);
-                            Integer y = getChildTag(tileentity, "y", IntTag.class, Integer.class);
-                            Integer z = getChildTag(tileentity, "z", IntTag.class, Integer.class);
-                            String customname = getChildTag(tileentity, "CustomName", StringTag.class, String.class);
-                            String id = getChildTag(tileentity, "id", StringTag.class, String.class);
-                            List<Item> items = getItems(tileentity);
 
                             Byte rot = getChildTag(tileentity, "Rot", ByteTag.class, Byte.class);
                             Byte skulltype = getChildTag(tileentity, "SkullType", ByteTag.class, Byte.class);
-                            
+                            Byte note = getChildTag(tileentity, "note", ByteTag.class, Byte.class);
+
+                            Integer x = getChildTag(tileentity, "x", IntTag.class, Integer.class);
+                            Integer y = getChildTag(tileentity, "y", IntTag.class, Integer.class);
+                            Integer z = getChildTag(tileentity, "z", IntTag.class, Integer.class);
+                            Integer record = getChildTag(tileentity, "Record", IntTag.class, Integer.class);
+                            Integer outputsignal = getChildTag(tileentity, "OutputSignal", IntTag.class, Integer.class);
+                            Integer transfercooldown = getChildTag(tileentity, "TransferCooldown", IntTag.class, Integer.class);
+                            Integer levels = getChildTag(tileentity, "Levels", IntTag.class, Integer.class);
+                            Integer primary = getChildTag(tileentity, "Primary", IntTag.class, Integer.class);
+                            Integer secondary = getChildTag(tileentity, "Secondary", IntTag.class, Integer.class);
+
+                            RecordItem recorditem = null;
+
                             Short delay = getChildTag(tileentity, "Delay", ShortTag.class, Short.class);
                             Short maxnearbyentities = getChildTag(tileentity, "MaxNearbyEntities", ShortTag.class, Short.class);
                             Short maxspawndelay = getChildTag(tileentity, "MaxSpawnDelay", ShortTag.class, Short.class);
@@ -675,20 +676,21 @@ public class SchematicUtil {
                             Short requiredplayerrange = getChildTag(tileentity, "RequiredPlayerRange", ShortTag.class, Short.class);
                             Short spawncount = getChildTag(tileentity, "SpawnCount", ShortTag.class, Short.class);
                             Short spawnrange = getChildTag(tileentity, "SpawnRange", ShortTag.class, Short.class);
-                            String entityid = getChildTag(tileentity, "EntityId", StringTag.class, String.class);
-
                             Short burntime = getChildTag(tileentity, "BurnTime", ShortTag.class, Short.class);
                             Short cooktime = getChildTag(tileentity, "CookTime", ShortTag.class, Short.class);
+                            Short brewtime = getChildTag(tileentity, "BrewTime", ShortTag.class, Short.class);
 
+                            String entityid = getChildTag(tileentity, "EntityId", StringTag.class, String.class);
+                            String customname = getChildTag(tileentity, "CustomName", StringTag.class, String.class);
+                            String id = getChildTag(tileentity, "id", StringTag.class, String.class);
                             String text1 = getChildTag(tileentity, "Text1", StringTag.class, String.class);
                             String text2 = getChildTag(tileentity, "Text2", StringTag.class, String.class);
                             String text3 = getChildTag(tileentity, "Text3", StringTag.class, String.class);
                             String text4 = getChildTag(tileentity, "Text4", StringTag.class, String.class);
+                            String command = getChildTag(tileentity, "Command", StringTag.class, String.class);
 
-                            Byte note = getChildTag(tileentity, "note", ByteTag.class, Byte.class);
-                            Integer record = getChildTag(tileentity, "Record", IntTag.class, Integer.class);
+                            List<Item> items = getItems(tileentity);
 
-                            RecordItem recorditem = null;
                             if (tileentity.containsKey("RecordItem")) {
                                 Map<String, Tag> recorditemtag = getChildTag(tileentity, "RecordItem", CompoundTag.class).getValue();
                                 Byte count = getChildTag(recorditemtag, "Count", ByteTag.class, Byte.class);
@@ -697,10 +699,10 @@ public class SchematicUtil {
                                 recorditem = new RecordItem(count, damage, recorditemid);
                             }
 
-                            Short brewtime = getChildTag(tileentity, "BrewTime", ShortTag.class, Short.class);
-                            String command = getChildTag(tileentity, "Command", StringTag.class, String.class); 
-
-                            tileentities.add(new TileEntity(x, y, z, customname, id, items, rot, skulltype, delay, maxnearbyentities, maxspawndelay, minspawndelay, requiredplayerrange, spawncount, spawnrange, entityid, burntime, cooktime, text1, text2, text3, text4, note, record, recorditem, brewtime, command));
+                            tileentities.add(new TileEntity(x, y, z, customname, id, items, rot, skulltype, delay, maxnearbyentities, 
+                                    maxspawndelay, minspawndelay, requiredplayerrange, spawncount, spawnrange, entityid, burntime, cooktime, 
+                                    text1, text2, text3, text4, note, record, recorditem, brewtime, command, outputsignal,
+                                    transfercooldown, levels, primary, secondary));
                         }
                     }
                 }
@@ -716,36 +718,65 @@ public class SchematicUtil {
     
     public Entity getEntity(CompoundTag tag) {
         Map<String, Tag> entity = tag.getValue();
+        
         Byte dir = getChildTag(entity, "Dir", ByteTag.class, Byte.class);
         Byte direction = getChildTag(entity, "Direction", ByteTag.class, Byte.class);
         Byte invulnerable = getChildTag(entity, "Invulnerable", ByteTag.class, Byte.class);
         Byte onground = getChildTag(entity, "OnGround", ByteTag.class, Byte.class);
-        Short air = getChildTag(entity, "Air", ShortTag.class, Short.class);
-        Short fire = getChildTag(entity, "Fire", ShortTag.class, Short.class);
-        Integer dimension = getChildTag(entity, "Dimension", IntTag.class, Integer.class);
-        Integer portalcooldown = getChildTag(entity, "PortalCooldown", IntTag.class, Integer.class);
-        Integer tilex = getChildTag(entity, "TileX", IntTag.class, Integer.class);
-        Integer tiley = getChildTag(entity, "TileY", IntTag.class, Integer.class);
-        Integer tilez = getChildTag(entity, "TileZ", IntTag.class, Integer.class);
-        Float falldistance = getChildTag(entity, "FallDistance", FloatTag.class, Float.class);
-        String id = getChildTag(entity, "id", StringTag.class, String.class);
-        String motive = getChildTag(entity, "Motive", StringTag.class, String.class);
-        List<Double> motion = convert(getChildTag(entity, "Motion", ListTag.class, List.class), Double.class);
-        List<Double> pos = convert(getChildTag(entity, "Pos", ListTag.class, List.class), Double.class);
-        List<Float> rotation = convert(getChildTag(entity, "Rotation", ListTag.class, List.class), Float.class);
-
         Byte canpickuploot = getChildTag(entity, "CanPickUpLoot", ByteTag.class, Byte.class);
         Byte color = getChildTag(entity, "Color", ByteTag.class, Byte.class);
         Byte customnamevisible = getChildTag(entity, "CustomNameVisible", ByteTag.class, Byte.class);
         Byte leashed = getChildTag(entity, "Leashed", ByteTag.class, Byte.class);
         Byte persistencerequired = getChildTag(entity, "PersistenceRequired", ByteTag.class, Byte.class);
         Byte sheared = getChildTag(entity, "Sheared", ByteTag.class, Byte.class);
+        Byte skeletontype = getChildTag(entity, "SkeletonType", ByteTag.class, Byte.class);
+        Byte isbaby = getChildTag(entity, "IsBaby", ByteTag.class, Byte.class);
+        Byte itemrotation = getChildTag(entity, "ItemRotation", ByteTag.class, Byte.class);
+        
+        Double pushx = getChildTag(entity, "PushX", DoubleTag.class, Double.class);
+        Double pushz = getChildTag(entity, "PushZ", DoubleTag.class, Double.class);
+        
+        Entity riding = null;
+        
+        Float falldistance = getChildTag(entity, "FallDistance", FloatTag.class, Float.class);
+        Float absorptionamount = getChildTag(entity, "AbsorptionAmount", FloatTag.class, Float.class);
+        Float healf = getChildTag(entity, "HealF", FloatTag.class, Float.class);
+        Float itemdropchance = getChildTag(entity, "ItemDropChance", FloatTag.class, Float.class);
+        
+        Integer dimension = getChildTag(entity, "Dimension", IntTag.class, Integer.class);
+        Integer portalcooldown = getChildTag(entity, "PortalCooldown", IntTag.class, Integer.class);
+        Integer tilex = getChildTag(entity, "TileX", IntTag.class, Integer.class);
+        Integer tiley = getChildTag(entity, "TileY", IntTag.class, Integer.class);
+        Integer tilez = getChildTag(entity, "TileZ", IntTag.class, Integer.class);
+        Integer age = null; //Handled lower
+        Integer inlove = getChildTag(entity, "InLove", IntTag.class, Integer.class);
+        Integer transfercooldown = getChildTag(entity, "TransferCooldown", IntTag.class, Integer.class);
+        Integer tntfuse = getChildTag(entity, "TNTFuse", IntTag.class, Integer.class);
+        
+        Item item = null;
+        
+        Leash leash = null;
+        
+        Short air = getChildTag(entity, "Air", ShortTag.class, Short.class);
+        Short fire = getChildTag(entity, "Fire", ShortTag.class, Short.class);
         Short attacktime = getChildTag(entity, "AttachTime", ShortTag.class, Short.class);
         Short deathtime = getChildTag(entity, "DeathTime", ShortTag.class, Short.class);
         Short health = getChildTag(entity, "Health", ShortTag.class, Short.class);
         Short hurttime = getChildTag(entity, "HurtTime", ShortTag.class, Short.class);
-        Integer age = null;
+        Short fuel = getChildTag(entity, "Fuel", ShortTag.class, Short.class);
         
+        String id = getChildTag(entity, "id", StringTag.class, String.class);
+        String motive = getChildTag(entity, "Motive", StringTag.class, String.class);
+        String customname = getChildTag(entity, "CustomName", StringTag.class, String.class);
+        
+        List<Double> motion = convert(getChildTag(entity, "Motion", ListTag.class, List.class), Double.class);
+        List<Double> pos = convert(getChildTag(entity, "Pos", ListTag.class, List.class), Double.class);
+        List<Float> rotation = convert(getChildTag(entity, "Rotation", ListTag.class, List.class), Float.class);
+        List<Attribute> attributes = getAttributes(entity);
+        List<Float> dropchances = convert(getChildTag(entity, "DropChances", ListTag.class, List.class), Float.class);
+        List<Equipment> equipments = getEquipment(entity);
+        List<Item> items = getItems(entity);
+
         try {
             age = getChildTag(entity, "Age", IntTag.class, Integer.class);
         }catch(IllegalArgumentException e) {
@@ -754,40 +785,24 @@ public class SchematicUtil {
             if (shortAge != null)
             age = shortAge.intValue();
         }
-        
-        Integer inlove = getChildTag(entity, "InLove", IntTag.class, Integer.class);
-        Float absorptionamount= getChildTag(entity, "AbsorptionAmount", FloatTag.class, Float.class);
-        Float healf= getChildTag(entity, "HealF", FloatTag.class, Float.class);
-        String customname = getChildTag(entity, "CustomName", StringTag.class, String.class);
-        List<Attribute> attributes = getAttributes(entity);
-        List<Float> dropchances = convert(getChildTag(entity, "DropChances", ListTag.class, List.class), Float.class);
-        List<Equipment> equipments = getEquipment(entity);
-        
-        Byte skeletontype = getChildTag(entity, "SkeletonType", ByteTag.class, Byte.class);
-        
-        Item item = null;
+
         CompoundTag itemtag = getChildTag(entity, "Item", CompoundTag.class);
         if (itemtag != null) {
             item = getItem(itemtag);
         }
         
-        Byte isbaby = getChildTag(entity, "IsBaby", ByteTag.class, Byte.class);
-        
-        Entity riding = null;
-        
         if (entity.containsKey("Riding")) {
             riding = getEntity(getChildTag(entity, "Riding", CompoundTag.class));
         }
-        
-        Leash leash = null;
-        
+
         if (entity.containsKey("Leash")) {
             leash = getLeash(getChildTag(entity, "Leash", CompoundTag.class));
         }
                                   
         return new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
                 canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
-                healf, customname, attributes, dropchances, equipments, skeletontype, riding, leash, item, isbaby);
+                healf, customname, attributes, dropchances, equipments, skeletontype, riding, leash, item, isbaby, items, transfercooldown, fuel, pushx, pushz, tntfuse,
+                itemrotation, itemdropchance);
     }
     
     public Leash getLeash(CompoundTag leashelement) {
@@ -838,8 +853,8 @@ public class SchematicUtil {
         return new Item(count, slot, damage, itemid, tag);
     }
     
-    public List<Item> getItems(Map<String, Tag> tileentity) {
-        List<?> itemsList = getChildTag(tileentity, "Items", ListTag.class, List.class);
+    public List<Item> getItems(Map<String, Tag> entity) {
+        List<?> itemsList = getChildTag(entity, "Items", ListTag.class, List.class);
 
         if (itemsList != null) {
             List<Item> items = new ArrayList<Item>();

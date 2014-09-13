@@ -24,9 +24,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.comphenix.protocol.wrappers.nbt.NbtCompound;
+/*import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
-import com.comphenix.protocol.wrappers.nbt.NbtList;
+import com.comphenix.protocol.wrappers.nbt.NbtList;*/
 import com.worldcretornica.dungeonme.map.DungeonFont;
 import com.worldcretornica.dungeonme.map.MapListener;
 import com.worldcretornica.dungeonme.schematic.Schematic;
@@ -64,15 +64,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
         if(label.equalsIgnoreCase("dungeonme")) {
             if(args.length == 0) {
                 if(sender instanceof Player) {
-                    Player p = (Player) sender;
-                    
-                    ItemStack is = p.getItemInHand();
-                    NbtCompound compound = NbtFactory.asCompound(NbtFactory.fromItemTag(is));
-                    
-                    
-                    try{
-                        getLogger().info(compound.toString());
-                    }catch(Exception e) {}
+                   
                 }
             }else if(args[0].equalsIgnoreCase("paste")) {
                 
@@ -126,7 +118,8 @@ public class DungeonMe extends JavaPlugin implements Listener {
         if (block != null && block.getType() == Material.IRON_DOOR_BLOCK && is != null) {
 
             Player p = event.getPlayer();
-            NbtCompound tag = NbtFactory.asCompound(NbtFactory.fromItemTag(is));
+            //TODO
+            /*NbtCompound tag = NbtFactory.asCompound(NbtFactory.fromItemTag(is));
 
             if (tag != null && tag.containsKey("display")) {
                 NbtCompound display = tag.getCompoundOrDefault("display");
@@ -141,7 +134,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
                         }
                     }
                 }
-            }
+            }*/
         }
     }
     
