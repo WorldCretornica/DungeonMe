@@ -6,15 +6,23 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.generator.BlockPopulator;
 
+import com.worldcretornica.dungeonme.DungeonMe;
+
 public class StairPopulator extends BlockPopulator {
 
+    private DungeonMe plugin;
+    
+    public StairPopulator(DungeonMe instance) {
+        this.plugin = instance;
+    }
+    
     @Override
     public void populate(World w, Random rand, Chunk chunk) {
         
         final long seed = w.getSeed();
         
-        final long roomx = chunk.getX();
-        final long roomz = chunk.getZ();
+        final int roomx = chunk.getX();
+        final int roomz = chunk.getZ();
         
         final int xx = (int) (roomx << 4);
         final int zz = (int) (roomz << 4);
@@ -23,15 +31,15 @@ public class StairPopulator extends BlockPopulator {
         int maxY = w.getMaxHeight();
         int chance;
                 
-        for (long roomy = 0; roomy < (maxY >> 3) - 1; roomy++) {
+        for (int roomy = 0; roomy < (maxY >> 3) - 1; roomy++) {
             yy = (int) (roomy << 3);
 
             // Stairs
             // Chance of stairs in this room
-            chance = new Random(seed ^ (roomx << 32) ^ (roomy << 16) ^ roomz).nextInt(100) + 1;
+            chance = plugin.getRandom(seed, roomx, roomy, roomz).nextInt(100) + 1;
             
             if (chance >= 95) {
-                chance = new Random(seed ^ (roomx << 32) ^ (roomy << 16) ^ roomz).nextInt(4) + 1;
+                chance = plugin.getRandom(seed, roomx, roomy, roomz).nextInt(4) + 1;
                 
                 switch (chance) {
                 case 1:

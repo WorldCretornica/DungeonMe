@@ -10,11 +10,13 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
 import com.worldcretornica.dungeonme.populator.DoorPopulator;
+import com.worldcretornica.dungeonme.populator.RoomPopulator;
 import com.worldcretornica.dungeonme.populator.StairPopulator;
+import com.worldcretornica.dungeonme.schematic.Schematic;
+import com.worldcretornica.dungeonme.schematic.Size;
 
 public class DungeonGenerator extends ChunkGenerator {
 
-    @SuppressWarnings("unused")
     private DungeonMe plugin;
     
     public DungeonGenerator(DungeonMe instance) {
@@ -30,91 +32,68 @@ public class DungeonGenerator extends ChunkGenerator {
         Random rand = null;
         long seed = w.getSeed();
         
+        int roomX2 = roomX >> 2;
+        int roomX1 = roomX >> 1;
+        int roomZ2 = roomZ >> 2;
+        int roomZ1 = roomZ >> 1;
         
-        long roomX2 = ((long) roomX) >> 2;
-        long roomX1 = ((long) roomX) >> 1;
-        long roomZ2 = ((long) roomZ) >> 2;
-        long roomZ1 = ((long) roomZ) >> 1;
-        
-        for (long roomY = 0; roomY < (maxY >> 3); roomY++) {
+        for (int roomY = 0; roomY < (maxY >> 3); roomY++) {
             //Check if it's a 4x4x4 room
-            rand = new Random(seed ^ (roomX2 << 32) ^ ((roomY >> 2) << 16) ^ roomZ2);
+            //rand = new Random(seed ^ (roomX2 << 32) ^ ((roomY >> 2) << 16) ^ roomZ2);
+            rand = plugin.getRandom(seed, roomX2, roomY >> 2, roomZ2);
             if ((rand.nextInt(100) + 1) >= 99) {
                 setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 35);
             } else {
                 //Check if it's a 4x4x2 room
-                rand = new Random(seed ^ (roomX2 << 32) ^ ((roomY >> 1) << 16) ^ roomZ2);
+                //rand = new Random(seed ^ (roomX2 << 32) ^ ((roomY >> 1) << 16) ^ roomZ2);
+                rand = plugin.getRandom(seed, roomX2, roomY >> 1, roomZ2);
                 if ((rand.nextInt(100) + 1) >= 97) {
                     setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 17);
                 } else {
                     //Check if it's a 2x2x2 room
-                    rand = new Random(seed ^ (roomX1 << 32) ^ ((roomY >> 1) << 16) ^ roomZ1);
+                    //rand = new Random(seed ^ (roomX1 << 32) ^ ((roomY >> 1) << 16) ^ roomZ1);
+                    rand = plugin.getRandom(seed, roomX1, roomY >> 1, roomZ1);
                     if ((rand.nextInt(100) + 1) >= 95) {
                         setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 1);
                     } else {
                         //Check if it's a 2x2x1
-                        rand = new Random(seed ^ (roomX1 << 32) ^ ((roomY) << 16) ^ roomZ1);
+                        //rand = new Random(seed ^ (roomX1 << 32) ^ ((roomY) << 16) ^ roomZ1);
+                        rand = plugin.getRandom(seed, roomX1, roomY, roomZ1);
                         if ((rand.nextInt(100) + 1) >= 90) {
                             setBlock(result, 0, (int) ((roomY << 3) + 1), 0, (byte) 2);
                         } else {
-                            //Else make 1x1 room
-                            makeSingleRoom(result, (int) roomY + 1);
+                            //Else make 1x1x1 room
+                            //rand = new Random(seed ^ (roomX << 32) ^ ((roomY) << 16) ^ roomZ);
+                            rand = plugin.getRandom(seed, roomX, roomY, roomZ);
+                            makeSingleRoom(result, (int) roomY, plugin.getSchematicUtil().getNextSchematic(Size.OneXOneXOne, rand), w);
                         }
                     }
                 }
             }
         }
-        
-        /*
-        //Single room
-        for (int x = 0; x < 16; x++) {
-        	for (int y = 0; y < maxY; y++) {
-        		setBlock(result, x, y, 0, (byte) 98);
-        		setBlock(result, x, y, 15, (byte) 98);
-        	}        	
-        }
-        
-        for (int z = 1; z < 15; z++) {
-        	for (int y = 0; y < maxY; y++) {
-        		setBlock(result, 0, y, z, (byte) 98);
-        		setBlock(result, 15, y, z, (byte) 98);
-        	}
-        }
-        
-        for (int y = 0; y < maxY; y += 8) {
-        	for (int x = 1; x < 15; x++) {
-        		for (int z = 1; z < 15; z++) {
-        			setBlock(result, x, y, z, (byte) 98);
-        			setBlock(result, x, y + 7, z, (byte) 98);
-        		}
-        	}
-        }*/
-        
+                
         return result;
     }
-    
-    
-    public void makeSingleRoom(byte[][] result, int roomY) {
-        int maxY = (roomY << 3) - 1;
-        int minY = maxY - 7;
+
+    public void makeSingleRoom(byte[][] result, int roomY, Schematic schematic, World w) {
+        int minY = roomY << 3;
         
-        for (int y = minY; y <= maxY; y++) {
-            for (int x = 0; x < 16; x++) {
-
-                setBlock(result, x, y, 0, (byte) 98);
-                setBlock(result, x, y, 15, (byte) 98);
-            }
-
-            for (int z = 1; z < 15; z++) {
-                setBlock(result, 0, y, z, (byte) 98);
-                setBlock(result, 15, y, z, (byte) 98);
-            }
-        }
-
-        for (int x = 1; x < 15; x++) {
-            for (int z = 1; z < 15; z++) {
-                setBlock(result, x, minY, z, (byte) 98);
-                setBlock(result, x, maxY, z, (byte) 98);
+        if (schematic == null) {
+            plugin.getLogger().severe("Schematic is null");
+        } else {
+            
+            int[] blocks = schematic.getBlocks();
+            Short length = schematic.getLength();
+            Short width = schematic.getWidth();
+            Short height = schematic.getHeight();
+            
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    for (int z = 0; z < length; ++z) {
+                        int index = y * width * length + z * width + x;
+                        setBlock(result, x, y + minY, z, (byte) blocks[index]);
+                    }
+                }
             }
         }
     }
@@ -132,7 +111,7 @@ public class DungeonGenerator extends ChunkGenerator {
     }
     
     public List<BlockPopulator> getDefaultPopulators(World world) {
-        return Arrays.asList(new DoorPopulator(), new StairPopulator());
+        return Arrays.asList(new RoomPopulator(plugin), new DoorPopulator(plugin), new StairPopulator(plugin));
     }
     
     public boolean canSpawn(World world, int x, int z) {

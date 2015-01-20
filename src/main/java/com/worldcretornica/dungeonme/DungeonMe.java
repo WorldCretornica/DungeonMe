@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
+import java.util.Random;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -24,20 +25,31 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+
+
+
+
+
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 /*import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 import com.comphenix.protocol.wrappers.nbt.NbtList;*/
 import com.worldcretornica.dungeonme.map.DungeonFont;
 import com.worldcretornica.dungeonme.map.MapListener;
 import com.worldcretornica.dungeonme.schematic.Schematic;
+import com.worldcretornica.dungeonme.schematic.Size;
 
 public class DungeonMe extends JavaPlugin implements Listener {
 
     private SchematicUtil schematicutil;
     
+    private final HashFunction hf = Hashing.md5();
+    
     @Override
     public void onDisable() {
-
+        
     }
 
     @Override
@@ -82,7 +94,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
                             
                         }
                         
-                        schematicutil.pasteSchematic(l, schemid);
+                        schematicutil.pasteSchematic(l, Size.OneXOneXOne, schemid);
                     }
                     
                 } else {
@@ -101,6 +113,14 @@ public class DungeonMe extends JavaPlugin implements Listener {
                         e.printStackTrace();
                     }
                 }
+            }else if(args[0].equalsIgnoreCase("test")) {
+                
+                //getServer().getServerId()
+               
+                
+                
+                
+                
             }
             
             return true;
@@ -108,7 +128,14 @@ public class DungeonMe extends JavaPlugin implements Listener {
         return false;
     }
         
- 
+    public SchematicUtil getSchematicUtil() {
+        return this.schematicutil;
+    }
+    
+    public Random getRandom(long seed, int roomX, int roomY, int roomZ) {
+        return new Random(hf.newHasher().putLong(seed).putLong(roomX).putInt(roomY).putLong(roomZ).hash().asLong());
+    }
+    
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
 
@@ -117,7 +144,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
 
         if (block != null && block.getType() == Material.IRON_DOOR_BLOCK && is != null) {
 
-            Player p = event.getPlayer();
+            //Player p = event.getPlayer();
             //TODO
             /*NbtCompound tag = NbtFactory.asCompound(NbtFactory.fromItemTag(is));
 

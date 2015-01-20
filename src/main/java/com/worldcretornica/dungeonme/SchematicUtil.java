@@ -11,9 +11,11 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.bukkit.Location;
@@ -48,6 +50,7 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.worldcretornica.dungeonme.jnbt.*;
 import com.worldcretornica.dungeonme.schematic.*;
@@ -60,16 +63,25 @@ public class SchematicUtil {
         plugin = instance;
     }
     
-    private List<Schematic> loadedschematics;
+    private Map<Size, List<Schematic>> loadedschematics;
 
-    public Schematic getSchematic(int id) {
-        return loadedschematics.get(id);
+    public Schematic getNextSchematic(Size size, Random rand) {
+        if (loadedschematics.containsKey(size)) {
+            int id = rand.nextInt(loadedschematics.get(size).size());
+            return getSchematic(size, id);
+        } else {
+            return null;
+        }
+    }
+    
+    public Schematic getSchematic(Size size, int id) {
+        return loadedschematics.get(size).get(id);
     }
 
     public void loadSchematics() {
         plugin.getLogger().info("Loading room schematics...");
 
-        loadedschematics = new ArrayList<>();
+        loadedschematics = new HashMap<>();
         
         for (final File fileEntry : new File(plugin.getDataFolder().getPath() + "/Rooms").listFiles()) {
             if (!fileEntry.isDirectory()) {
@@ -77,7 +89,12 @@ public class SchematicUtil {
                     Schematic schem = loadSchematic(fileEntry);
                     
                     if (schem != null) {
-                        loadedschematics.add(schem);
+                        Size size = schem.getSize();
+                        
+                        if (!loadedschematics.containsKey(size)) {
+                            loadedschematics.put(size, new ArrayList<Schematic>());
+                        }
+                        loadedschematics.get(size).add(schem);
                     }
                 } catch (IllegalArgumentException | IOException e) {
                     plugin.getLogger().severe("Error loading file " + fileEntry.getName());
@@ -85,16 +102,28 @@ public class SchematicUtil {
                 }
             }
         }
+        
+        int nbrooms = 0;
+        for (Size size : loadedschematics.keySet()) {
+            nbrooms += loadedschematics.get(size).size();
+        }
 
-        plugin.getLogger().info("" + loadedschematics.size() + " room schematics loaded.");
+        plugin.getLogger().info("" + nbrooms + " room schematics loaded.");
     }
     
-    public void pasteSchematic(Location loc, int id) {
-        pasteSchematic(loc, getSchematic(id));
+    public void pasteSchematic(Location loc, Size size, int id) {
+        Schematic schem = getSchematic(size, id);
+        pasteSchematicBlocks(loc, schem, true);
+        pasteSchematicEntities(loc, schem);
+    }
+    
+    public void pasteSchematic(Location loc, Schematic schem) {
+        pasteSchematicBlocks(loc, schem, true);
+        pasteSchematicEntities(loc, schem);
     }
     
     @SuppressWarnings("deprecation")
-    public void pasteSchematic(Location loc, Schematic schematic) {
+    public void pasteSchematicBlocks(Location loc, Schematic schematic, boolean setBlock) {
         World world = loc.getWorld();
         int[] blocks = schematic.getBlocks();
         byte[] blockData = schematic.getData();
@@ -102,6 +131,32 @@ public class SchematicUtil {
         Short length = schematic.getLength();
         Short width = schematic.getWidth();
         Short height = schematic.getHeight();
+        
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                for (int z = 0; z < length; ++z) {
+                    int index = y * width * length + z * width + x;
+                    
+                    if (blocks[index] != 0) {
+                        Block block = world.getBlockAt(x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ());
+                        
+                        try {
+                            if (setBlock)
+                                block.setTypeIdAndData(blocks[index], blockData[index], false);
+                            block.setData(blockData[index], false);
+                        } catch (NullPointerException e) {
+                            plugin.getLogger().info("Error pasting block : " + blocks[index] + " of data " + blockData[index]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @SuppressWarnings("deprecation")
+    public void pasteSchematicEntities(Location loc, Schematic schematic) {
+        World world = loc.getWorld();
+        
         List<Entity> entities = schematic.getEntities();
         List<TileEntity> tileentities = schematic.getTileEntities();
         Integer originX = schematic.getOriginX();
@@ -112,22 +167,6 @@ public class SchematicUtil {
         if (originY == null) originY = 0;
         if (originZ == null) originZ = 0;
 
-        for (int x = 0; x < width; ++x) {
-            for (int y = 0; y < height; ++y) {
-                for (int z = 0; z < length; ++z) {
-                    int index = y * width * length + z * width + x;
-                    Block block = new Location(world, x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ()).getBlock();
-                    
-                    try {
-                        block.setTypeIdAndData(blocks[index], blockData[index], false);
-                        block.setData(blockData[index], false);
-                    } catch (NullPointerException e) {
-                        plugin.getLogger().info("Error pasting block : " + blocks[index] + " of data " + blockData[index]);
-                    }
-                }
-            }
-        }
-        
         try {
             for (Entity e : entities) {
                 createEntity(e, loc, originX, originY, originZ);
@@ -140,9 +179,7 @@ public class SchematicUtil {
         
         for (TileEntity te : tileentities) {
 
-            Location teloc = new Location(world, te.getX() + loc.getBlockX(), te.getY() + loc.getBlockY(), te.getZ() + loc.getBlockZ());
-
-            Block block = teloc.getBlock();
+            Block block = world.getBlockAt(te.getX() + loc.getBlockX(), te.getY() + loc.getBlockY(), te.getZ() + loc.getBlockZ());
             List<Item> items = te.getItems();
 
             // Short maxnearbyentities = te.getMaxNearbyEntities();
@@ -275,13 +312,16 @@ public class SchematicUtil {
         String author = itemtag.getAuthor();
         String title = itemtag.getTitle();
         Display display = itemtag.getDisplay();
-        List<String> lores = display.getLore();
-        String name = display.getName();
         
         ItemMeta itemmeta = is.getItemMeta();
         
-        itemmeta.setLore(lores);
-        itemmeta.setDisplayName(name);
+        if (display != null) {
+            List<String> lores = display.getLore();
+            String name = display.getName();
+            
+            itemmeta.setLore(lores);
+            itemmeta.setDisplayName(name);
+        }
         
         if (itemmeta instanceof BookMeta) {
             BookMeta bookmeta = (BookMeta) itemmeta;
@@ -578,7 +618,7 @@ public class SchematicUtil {
     
     public Schematic loadSchematic(File file) throws IOException, IllegalArgumentException {
         
-        long checksum = Files.getChecksum(file , new java.util.zip.CRC32());
+        long checksum = Files.hash(file, Hashing.md5()).asLong();
         
         Schematic schem = loadCompiledSchematic(file.getName(), checksum);
 
@@ -600,6 +640,22 @@ public class SchematicUtil {
                 short length = getChildTag(schematic, "Length", ShortTag.class, Short.class);
                 short height = getChildTag(schematic, "Height", ShortTag.class, Short.class);
                 String roomauthor = getChildTag(schematic, "RoomAuthor", StringTag.class, String.class);
+                
+                Size size = null;
+                               
+                if (width == 16 * 4 && length == 16 * 4) {
+                    if (height == 8 * 4) {
+                        size = Size.FourXFourXFour;
+                    } else {
+                        size = Size.FourXFourXTwo;
+                    }
+                } else if (width == 16 * 2 && length == 16 * 2) {
+                    size = Size.TwoXTwoXTwo;
+                } else if (width == 16 * 2 || length == 16 * 2) {
+                    size = Size.TwoXTwoXOne;
+                } else {
+                    size = Size.OneXOneXOne;
+                }
                 
                 Integer originx = getChildTag(schematic, "WEOriginX", IntTag.class, Integer.class);
                 Integer originy = getChildTag(schematic, "WEOriginY", IntTag.class, Integer.class);
@@ -705,7 +761,7 @@ public class SchematicUtil {
                     }
                 }
 
-                schem = new Schematic(blocks, blockData, blockBiomes, materials, width, length, height, entities, tileentities, roomauthor, checksum, originx, originy, originz);
+                schem = new Schematic(blocks, blockData, blockBiomes, materials, width, length, height, entities, tileentities, roomauthor, checksum, originx, originy, originz, size);
 
                 saveCompiledSchematic(schem, file.getName());
             }

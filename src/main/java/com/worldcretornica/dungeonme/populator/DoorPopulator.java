@@ -6,30 +6,37 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.generator.BlockPopulator;
 
+import com.worldcretornica.dungeonme.DungeonMe;
 import com.worldcretornica.dungeonme.Orientation;
 
 public class DoorPopulator extends BlockPopulator {
 
+    private DungeonMe plugin;
+    
+    public DoorPopulator(DungeonMe instance) {
+        this.plugin = instance;
+    }
+    
     @Override
     public void populate(World w, Random rand, Chunk chunk) {
 
 		final long seed = w.getSeed();
 
-		final long roomx = chunk.getX();
-		final long roomz = chunk.getZ();
+		final int roomx = chunk.getX();
+		final int roomz = chunk.getZ();
 
 		final int xx = (int) (roomx << 4);
 		final int zz = (int) (roomz << 4);
 
 		final int maxY = w.getMaxHeight();
 
-		for (long roomy = 0; roomy < (maxY >> 3); roomy++) {
+		for (int roomy = 0; roomy < (maxY >> 3); roomy++) {
 			int yy = (int) (roomy << 3);
 			int door = 0;
 			boolean locked = false;
 
 			// Doors
-			Random current = new Random(seed ^ (roomx << 32) ^ (roomy << 16) ^ roomz);
+			Random current = plugin.getRandom(seed, roomx, roomy, roomz);
 
 			// bottomZ door
 			door = current.nextInt(100) + 1;
@@ -72,7 +79,7 @@ public class DoorPopulator extends BlockPopulator {
 			}
 
 			// Other doors
-			current = new Random(seed ^ (roomx << 32) ^ (roomy << 16) ^ (roomz + 1));
+			current = plugin.getRandom(seed, roomx, roomy, roomz + 1);
 
 			// topZ door
 			door = current.nextInt(100) + 1;
@@ -86,7 +93,7 @@ public class DoorPopulator extends BlockPopulator {
 			}
 
 			// topX door
-			current = new Random(seed ^ ((roomx + 1) << 32) ^ (roomy << 16)	^ roomz);
+			current = plugin.getRandom(seed, roomx + 1, roomy, roomz);
 
 			door = current.nextInt(100) + 1;
 			locked = current.nextInt(25) + 1 == 4;

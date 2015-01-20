@@ -20,8 +20,9 @@ public class Schematic extends AbstractSchematicElement {
     private Integer originx;
     private Integer originy;
     private Integer originz;
+    private Size size;
  
-    public Schematic(int[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum, Integer originx, Integer originy, Integer originz) {
+    public Schematic(int[] blocks, byte[] data, byte[] biomes, String materials, Short width, Short length, Short height, List<Entity> entities, List<TileEntity> tileentities, String roomauthor, Long checksum, Integer originx, Integer originy, Integer originz, Size size) {
         this.blocks = blocks;
         this.data = data;
         this.biomes = biomes;
@@ -36,6 +37,7 @@ public class Schematic extends AbstractSchematicElement {
         this.originx = originx;
         this.originy = originy;
         this.originz = originz;
+        this.size = size;
     }
 
     public int[] getBlocks() {
@@ -94,6 +96,10 @@ public class Schematic extends AbstractSchematicElement {
         return originz;
     }
     
+    public Size getSize() {
+        return size;
+    }
+    
     public String toString() {
         return "{" + this.getClass().getName() + 
                 ": blocks=" + Sanitize(blocks) +
@@ -109,6 +115,7 @@ public class Schematic extends AbstractSchematicElement {
                 ", checksum=" + Sanitize(checksum) + 
                 ", originx=" + Sanitize(originx) + 
                 ", originy=" + Sanitize(originy) +  
-                ", originz=" + Sanitize(originz) +  "}";
+                ", originz=" + Sanitize(originz) +  
+                ", size=" + Sanitize(size) + "}";
     }
 }
