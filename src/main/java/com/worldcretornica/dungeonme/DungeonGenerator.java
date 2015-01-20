@@ -12,7 +12,6 @@ import org.bukkit.generator.ChunkGenerator;
 import com.worldcretornica.dungeonme.populator.DoorPopulator;
 import com.worldcretornica.dungeonme.populator.RoomPopulator;
 import com.worldcretornica.dungeonme.populator.StairPopulator;
-import com.worldcretornica.dungeonme.schematic.Schematic;
 import com.worldcretornica.dungeonme.schematic.Size;
 
 public class DungeonGenerator extends ChunkGenerator {
@@ -65,7 +64,8 @@ public class DungeonGenerator extends ChunkGenerator {
                             //Else make 1x1x1 room
                             //rand = new Random(seed ^ (roomX << 32) ^ ((roomY) << 16) ^ roomZ);
                             rand = plugin.getRandom(seed, roomX, roomY, roomZ);
-                            makeSingleRoom(result, (int) roomY, plugin.getSchematicUtil().getNextSchematic(Size.OneXOneXOne, rand), w);
+                            //makeSingleRoom(result, (int) roomY, plugin.getSchematicUtil().getNextSchematic(Size.OneXOneXOne, rand));
+                            plugin.getSchematicUtil().generateNextSchematic(result, (int) roomY, Size.OneXOneXOne, rand);
                         }
                     }
                 }
@@ -75,7 +75,7 @@ public class DungeonGenerator extends ChunkGenerator {
         return result;
     }
 
-    public void makeSingleRoom(byte[][] result, int roomY, Schematic schematic, World w) {
+    /*public void makeSingleRoom(byte[][] result, int roomY, Schematic schematic) {
         int minY = roomY << 3;
         
         if (schematic == null) {
@@ -96,7 +96,7 @@ public class DungeonGenerator extends ChunkGenerator {
                 }
             }
         }
-    }
+    }*/
     
     protected void setBlock(byte[][] result, int x, int y, int z, byte blockkid) {
         if (result[y >> 4] == null) {

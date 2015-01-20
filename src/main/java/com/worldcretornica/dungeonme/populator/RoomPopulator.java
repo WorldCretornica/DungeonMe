@@ -8,7 +8,6 @@ import org.bukkit.World;
 import org.bukkit.generator.BlockPopulator;
 
 import com.worldcretornica.dungeonme.DungeonMe;
-import com.worldcretornica.dungeonme.schematic.Schematic;
 import com.worldcretornica.dungeonme.schematic.Size;
 
 public class RoomPopulator extends BlockPopulator {
@@ -65,40 +64,14 @@ public class RoomPopulator extends BlockPopulator {
                             
                             int yy = roomY << 3;
                             
-                            makeSingleRoom(new Location(w, xx, yy,zz), plugin.getSchematicUtil().getNextSchematic(Size.OneXOneXOne, rand));
+                            //makeSingleRoom(new Location(w, xx, yy,zz), plugin.getSchematicUtil().getNextSchematic(Size.OneXOneXOne, rand));
+                            plugin.getSchematicUtil().populateNextSchematic(new Location(w, xx, yy,zz), Size.OneXOneXOne, rand);
                         }
                     }
                 }
             }
         }
 	}
-    
-    public void makeSingleRoom(Location loc, Schematic schematic) {
-        /*int maxY = (roomY << 3) - 1;
-        int minY = maxY - 7;
-        
-        if (schematic == null) {
-            plugin.getLogger().severe("Schematic is null");
-        } else {
-            
-            int[] blocks = schematic.getBlocks();
-            Short length = schematic.getLength();
-            Short width = schematic.getWidth();
-            Short height = schematic.getHeight();
-            
-            for (int y = 0; y < height; ++y) {
-                for (int x = 0; x < width; ++x) {
-                    for (int z = 0; z < length; ++z) {
-                        int index = y * width * length + z * width + x;
-                        setBlock(result, x, y + minY, z, (byte) blocks[index]);
-                    }
-                }
-            }
-        }*/
-        
-        plugin.getSchematicUtil().pasteSchematicBlocks(loc, schematic, true);
-        plugin.getSchematicUtil().pasteSchematicEntities(loc, schematic);
-    }
 
     /*@SuppressWarnings("deprecation")
     private void setBlock(World w, int x, int y, int z, byte val, int id)

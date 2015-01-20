@@ -25,25 +25,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-
-
-
-
-
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-/*import com.comphenix.protocol.wrappers.nbt.NbtCompound;
-import com.comphenix.protocol.wrappers.nbt.NbtFactory;
-import com.comphenix.protocol.wrappers.nbt.NbtList;*/
 import com.worldcretornica.dungeonme.map.DungeonFont;
 import com.worldcretornica.dungeonme.map.MapListener;
-import com.worldcretornica.dungeonme.schematic.Schematic;
+import com.worldcretornica.dungeonme.schematic.AbstractSchematicUtil;
 import com.worldcretornica.dungeonme.schematic.Size;
 
 public class DungeonMe extends JavaPlugin implements Listener {
 
-    private SchematicUtil schematicutil;
+    private AbstractSchematicUtil schematicutil;
     
     private final HashFunction hf = Hashing.md5();
     
@@ -60,7 +51,15 @@ public class DungeonMe extends JavaPlugin implements Listener {
         
         prepareFolders();
         
-        schematicutil = new SchematicUtil(this);
+        if (Bukkit.getVersion().contains("1.7")) {
+            schematicutil = new com.worldcretornica.dungeonme.schematic.v1_7.SchematicUtil(this);
+        } else if (Bukkit.getVersion().contains("1.8")) {
+            schematicutil = new com.worldcretornica.dungeonme.schematic.v1_8.SchematicUtil(this);
+        } else {
+            getLogger().warning("This MC version is not supported yet, trying latest version!");
+            schematicutil = new com.worldcretornica.dungeonme.schematic.v1_8.SchematicUtil(this);
+        }
+        
         schematicutil.loadSchematics();
         
         new DungeonFont();
@@ -99,7 +98,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
                     
                 } else {
                 
-                    getLogger().info("Loading schematic...");
+                    /*getLogger().info("Loading schematic...");
                     try {
                         Schematic schem = schematicutil.loadSchematic(new File("C:\\Minecraft\\Schematic\\Test2.schematic"));
                         
@@ -109,9 +108,12 @@ public class DungeonMe extends JavaPlugin implements Listener {
                             
                             schematicutil.pasteSchematic(l, schem);
                         }
+                        
+                        schematicutil.pasteSchematic(l, size, id);
+                        
                     } catch (IllegalArgumentException | IOException e) {
                         e.printStackTrace();
-                    }
+                    }*/
                 }
             }else if(args[0].equalsIgnoreCase("test")) {
                 
@@ -128,7 +130,7 @@ public class DungeonMe extends JavaPlugin implements Listener {
         return false;
     }
         
-    public SchematicUtil getSchematicUtil() {
+    public AbstractSchematicUtil getSchematicUtil() {
         return this.schematicutil;
     }
     
