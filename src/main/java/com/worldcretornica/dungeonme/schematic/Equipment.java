@@ -1,6 +1,5 @@
-package com.worldcretornica.dungeonme.schematic.v1_7;
+package com.worldcretornica.dungeonme.schematic;
 
-import com.worldcretornica.dungeonme.schematic.AbstractSchematicElement;
 
 public class Equipment extends AbstractSchematicElement {
 

@@ -1,5 +1,7 @@
 package com.worldcretornica.dungeonme.schematic;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,14 @@ public abstract class AbstractSchematicUtil {
     public abstract void loadSchematics();
 
     public abstract void pasteSchematic(Location loc, Size size, int id);
+    
+    public abstract Schematic getNextSchematic(Size size, Random rand);
+    
+    public abstract Schematic getSchematic(Size size, int id);
+    
+    public abstract void pasteSchematic(Location loc, Schematic schem);
+    
+    public abstract Schematic loadSchematic(File file) throws IOException, IllegalArgumentException;
 
     protected <T extends Tag, K> K getChildTag(Map<String, Tag> items, String key, Class<T> expected, Class<K> result) {
         if (!items.containsKey(key)) {

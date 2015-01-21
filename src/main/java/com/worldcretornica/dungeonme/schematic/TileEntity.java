@@ -1,13 +1,12 @@
-package com.worldcretornica.dungeonme.schematic.v1_7;
+package com.worldcretornica.dungeonme.schematic;
 
 import java.util.List;
-
-import com.worldcretornica.dungeonme.schematic.AbstractSchematicElement;
 
 public class TileEntity extends AbstractSchematicElement {
 
     private static final long serialVersionUID = -2080234794735672945L;
 
+    // START - PRE 1.8
     private Byte rot;
     private Byte skulltype;
     private Byte note;
@@ -45,13 +44,18 @@ public class TileEntity extends AbstractSchematicElement {
     private String text4;
 
     private List<Item> items;
+    // END - PRE 1.8
+    
+    // START - 1.8
+    private List<Pattern> patterns;
+    // END - 1.8
 
     public TileEntity(Integer x, Integer y, Integer z, String customname, String id, List<Item> items, Byte rot, 
             Byte skulltype, Short delay, Short maxnearbyentities, Short maxspawndelay, Short minspawndelay, 
             Short requiredplayerrange, Short spawncount, Short spawnrange, String entityid, Short burntime, Short cooktime,
             String text1, String text2, String text3, String text4, Byte note, Integer record, RecordItem recorditem,
             Short brewtime, String command, Integer outputsignal, Integer transfercooldown, Integer levels,
-            Integer primary, Integer secondary) {
+            Integer primary, Integer secondary, List<Pattern> patterns) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -84,6 +88,7 @@ public class TileEntity extends AbstractSchematicElement {
         this.levels = levels;
         this.primary = primary;
         this.secondary = secondary;
+        this.patterns = patterns;
     }
 
     public Byte getRot() { return rot; }
@@ -123,6 +128,8 @@ public class TileEntity extends AbstractSchematicElement {
     public String getCommand() { return command; }
 
     public List<Item> getItems() { return items; }
+    
+    public List<Pattern> getPatterns() { return patterns; }
 
     public String toString() {
         return "{" + this.getClass().getName() + 

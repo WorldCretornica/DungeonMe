@@ -15,19 +15,21 @@ import org.bukkit.util.Vector;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.worldcretornica.dungeonme.DungeonMe;
-import com.worldcretornica.dungeonme.schematic.AbstractSchematicUtil;
-import com.worldcretornica.dungeonme.schematic.Size;
+import com.worldcretornica.dungeonme.schematic.*;
+import com.worldcretornica.dungeonme.schematic.Entity;
+import com.worldcretornica.dungeonme.schematic.Item;
 import com.worldcretornica.dungeonme.schematic.jnbt.*;
 
 public class SchematicUtil extends AbstractSchematicUtil {
 
-    private Map<Size, List<Schematic>> loadedschematics;
+    protected Map<Size, List<Schematic>> loadedschematics;
     
     public SchematicUtil(DungeonMe instance) {
         super(instance);
     }
 
-    private Schematic getNextSchematic(Size size, Random rand) {
+    @Override
+    public Schematic getNextSchematic(Size size, Random rand) {
         if (loadedschematics.containsKey(size)) {
             int id = rand.nextInt(loadedschematics.get(size).size());
             return getSchematic(size, id);
@@ -36,7 +38,8 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private Schematic getSchematic(Size size, int id) {
+    @Override
+    public Schematic getSchematic(Size size, int id) {
         return loadedschematics.get(size).get(id);
     }
 
@@ -75,45 +78,170 @@ public class SchematicUtil extends AbstractSchematicUtil {
     }
     
     @Override
+    public Schematic loadSchematic(File file) throws IOException, IllegalArgumentException {
+        
+        long checksum = Files.hash(file, Hashing.md5()).asLong();
+        
+        Schematic schem = loadCompiledSchematic(file.getName(), checksum);
+
+        if (schem == null) {
+
+            try (NBTInputStream nbtStream = new NBTInputStream(new FileInputStream(file))) {
+
+                CompoundTag schematicTag = (CompoundTag) nbtStream.readTag();
+                if (!schematicTag.getName().equals("Schematic")) {
+                    throw new IllegalArgumentException("Tag \"Schematic\" does not exist or is not first");
+                }
+
+                Map<String, Tag> schematic = schematicTag.getValue();
+                if (!schematic.containsKey("Blocks")) {
+                    throw new IllegalArgumentException("Schematic file is missing a \"Blocks\" tag");
+                }
+
+                short width = getChildTag(schematic, "Width", ShortTag.class, Short.class);
+                short length = getChildTag(schematic, "Length", ShortTag.class, Short.class);
+                short height = getChildTag(schematic, "Height", ShortTag.class, Short.class);
+                String roomauthor = getChildTag(schematic, "RoomAuthor", StringTag.class, String.class);
+                
+                Size size = null;
+                               
+                if (width == 16 * 4 && length == 16 * 4) {
+                    if (height == 8 * 4) {
+                        size = Size.FourXFourXFour;
+                    } else {
+                        size = Size.FourXFourXTwo;
+                    }
+                } else if (width == 16 * 2 && length == 16 * 2) {
+                    size = Size.TwoXTwoXTwo;
+                } else if (width == 16 * 2 || length == 16 * 2) {
+                    size = Size.TwoXTwoXOne;
+                } else {
+                    size = Size.OneXOneXOne;
+                }
+                
+                Integer originx = getChildTag(schematic, "WEOriginX", IntTag.class, Integer.class);
+                Integer originy = getChildTag(schematic, "WEOriginY", IntTag.class, Integer.class);
+                Integer originz = getChildTag(schematic, "WEOriginZ", IntTag.class, Integer.class);
+
+                String materials = getChildTag(schematic, "Materials", StringTag.class, String.class);
+                if (!materials.equals("Alpha")) {
+                    throw new IllegalArgumentException("Schematic file is not an Alpha schematic");
+                }
+
+                byte[] rawblocks = getChildTag(schematic, "Blocks", ByteArrayTag.class, byte[].class);
+                int[] blocks = new int[rawblocks.length];
+                
+                for(int ctr = 0; ctr < rawblocks.length; ctr++) {
+                    int blockid = rawblocks[ctr] & 0xff;
+                    
+                    //if(blockid < 0) blockid = 256 + blockid;
+                    
+                    blocks[ctr] = blockid;
+                }
+                
+                
+                byte[] blockData = getChildTag(schematic, "Data", ByteArrayTag.class, byte[].class);
+                byte[] blockBiomes = getChildTag(schematic, "Biomes", ByteArrayTag.class, byte[].class);
+
+                List<Entity> entities = null;
+                List<TileEntity> tileentities = null;
+
+                // Load Entities
+                List<?> entitiesList = getChildTag(schematic, "Entities", ListTag.class, List.class);
+
+                if (entitiesList != null) {
+                    entities = new ArrayList<Entity>();
+
+                    for (Object tag : entitiesList) {
+                        if (tag instanceof CompoundTag) {                                          
+                            entities.add(getEntity((CompoundTag) tag));
+                        }
+                    }
+                }
+
+                // Load TileEntities
+                List<?> tileentitiesList = getChildTag(schematic, "TileEntities", ListTag.class, List.class);
+
+                if (tileentitiesList != null) {
+                    tileentities = new ArrayList<TileEntity>();
+
+                    for (Object entityElement : tileentitiesList) {
+                        if (entityElement instanceof CompoundTag) {
+                            Map<String, Tag> tileentity = ((CompoundTag) entityElement).getValue();
+
+                            Byte rot = getChildTag(tileentity, "Rot", ByteTag.class, Byte.class);
+                            Byte skulltype = getChildTag(tileentity, "SkullType", ByteTag.class, Byte.class);
+                            Byte note = getChildTag(tileentity, "note", ByteTag.class, Byte.class);
+
+                            Integer x = getChildTag(tileentity, "x", IntTag.class, Integer.class);
+                            Integer y = getChildTag(tileentity, "y", IntTag.class, Integer.class);
+                            Integer z = getChildTag(tileentity, "z", IntTag.class, Integer.class);
+                            Integer record = getChildTag(tileentity, "Record", IntTag.class, Integer.class);
+                            Integer outputsignal = getChildTag(tileentity, "OutputSignal", IntTag.class, Integer.class);
+                            Integer transfercooldown = getChildTag(tileentity, "TransferCooldown", IntTag.class, Integer.class);
+                            Integer levels = getChildTag(tileentity, "Levels", IntTag.class, Integer.class);
+                            Integer primary = getChildTag(tileentity, "Primary", IntTag.class, Integer.class);
+                            Integer secondary = getChildTag(tileentity, "Secondary", IntTag.class, Integer.class);
+
+                            RecordItem recorditem = null;
+
+                            Short delay = getChildTag(tileentity, "Delay", ShortTag.class, Short.class);
+                            Short maxnearbyentities = getChildTag(tileentity, "MaxNearbyEntities", ShortTag.class, Short.class);
+                            Short maxspawndelay = getChildTag(tileentity, "MaxSpawnDelay", ShortTag.class, Short.class);
+                            Short minspawndelay = getChildTag(tileentity, "MinSpawnDelay", ShortTag.class, Short.class);
+                            Short requiredplayerrange = getChildTag(tileentity, "RequiredPlayerRange", ShortTag.class, Short.class);
+                            Short spawncount = getChildTag(tileentity, "SpawnCount", ShortTag.class, Short.class);
+                            Short spawnrange = getChildTag(tileentity, "SpawnRange", ShortTag.class, Short.class);
+                            Short burntime = getChildTag(tileentity, "BurnTime", ShortTag.class, Short.class);
+                            Short cooktime = getChildTag(tileentity, "CookTime", ShortTag.class, Short.class);
+                            Short brewtime = getChildTag(tileentity, "BrewTime", ShortTag.class, Short.class);
+
+                            String entityid = getChildTag(tileentity, "EntityId", StringTag.class, String.class);
+                            String customname = getChildTag(tileentity, "CustomName", StringTag.class, String.class);
+                            String id = getChildTag(tileentity, "id", StringTag.class, String.class);
+                            String text1 = getChildTag(tileentity, "Text1", StringTag.class, String.class);
+                            String text2 = getChildTag(tileentity, "Text2", StringTag.class, String.class);
+                            String text3 = getChildTag(tileentity, "Text3", StringTag.class, String.class);
+                            String text4 = getChildTag(tileentity, "Text4", StringTag.class, String.class);
+                            String command = getChildTag(tileentity, "Command", StringTag.class, String.class);
+
+                            List<Item> items = getItems(tileentity);
+
+                            if (tileentity.containsKey("RecordItem")) {
+                                Map<String, Tag> recorditemtag = getChildTag(tileentity, "RecordItem", CompoundTag.class).getValue();
+                                Byte count = getChildTag(recorditemtag, "Count", ByteTag.class, Byte.class);
+                                Short damage = getChildTag(recorditemtag, "Damage", ShortTag.class, Short.class);
+                                Short recorditemid = getChildTag(recorditemtag, "id", ShortTag.class, Short.class);
+                                recorditem = new RecordItem(count, damage, recorditemid);
+                            }
+
+                            tileentities.add(new TileEntity(x, y, z, customname, id, items, rot, skulltype, delay, maxnearbyentities, 
+                                    maxspawndelay, minspawndelay, requiredplayerrange, spawncount, spawnrange, entityid, burntime, cooktime, 
+                                    text1, text2, text3, text4, note, record, recorditem, brewtime, command, outputsignal,
+                                    transfercooldown, levels, primary, secondary, null));
+                        }
+                    }
+                }
+
+                schem = new Schematic(blocks, blockData, blockBiomes, materials, width, length, height, entities, tileentities, roomauthor, checksum, originx, originy, originz, size);
+
+                saveCompiledSchematic(schem, file.getName());
+            }
+        }
+        
+        return schem;
+    }
+    
+    @Override
     public void pasteSchematic(Location loc, Size size, int id) {
         Schematic schem = getSchematic(size, id);
         pasteSchematic(loc, schem);
     }
     
-    private void pasteSchematic(Location loc, Schematic schem) {
+    @Override
+    public void pasteSchematic(Location loc, Schematic schem) {
         pasteSchematicBlocks(loc, schem, true);
         pasteSchematicEntities(loc, schem);
-    }
-    
-    @SuppressWarnings("deprecation")
-    private void pasteSchematicBlocks(Location loc, Schematic schematic, boolean setBlock) {
-        World world = loc.getWorld();
-        int[] blocks = schematic.getBlocks();
-        byte[] blockData = schematic.getData();
-
-        Short length = schematic.getLength();
-        Short width = schematic.getWidth();
-        Short height = schematic.getHeight();
-        
-        for (int x = 0; x < width; ++x) {
-            for (int y = 0; y < height; ++y) {
-                for (int z = 0; z < length; ++z) {
-                    int index = y * width * length + z * width + x;
-                    
-                    if (blocks[index] != 0) {
-                        Block block = world.getBlockAt(x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ());
-                        
-                        try {
-                            if (setBlock)
-                                block.setTypeIdAndData(blocks[index], blockData[index], false);
-                            block.setData(blockData[index], false);
-                        } catch (NullPointerException e) {
-                            plugin.getLogger().info("Error pasting block : " + blocks[index] + " of data " + blockData[index]);
-                        }
-                    }
-                }
-            }
-        }
     }
     
     @Override
@@ -150,8 +278,41 @@ public class SchematicUtil extends AbstractSchematicUtil {
         pasteSchematicEntities(loc, schematic);
     }
     
+    
+    
     @SuppressWarnings("deprecation")
-    private void pasteSchematicEntities(Location loc, Schematic schematic) {
+    protected void pasteSchematicBlocks(Location loc, Schematic schematic, boolean setBlock) {
+        World world = loc.getWorld();
+        int[] blocks = schematic.getBlocks();
+        byte[] blockData = schematic.getData();
+
+        Short length = schematic.getLength();
+        Short width = schematic.getWidth();
+        Short height = schematic.getHeight();
+        
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                for (int z = 0; z < length; ++z) {
+                    int index = y * width * length + z * width + x;
+                    
+                    if (blocks[index] != 0) {
+                        Block block = world.getBlockAt(x + loc.getBlockX(), y + loc.getBlockY(), z + loc.getBlockZ());
+                        
+                        try {
+                            if (setBlock)
+                                block.setTypeIdAndData(blocks[index], blockData[index], false);
+                            block.setData(blockData[index], false);
+                        } catch (NullPointerException e) {
+                            plugin.getLogger().info("Error pasting block : " + blocks[index] + " of data " + blockData[index]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @SuppressWarnings("deprecation")
+    protected void pasteSchematicEntities(Location loc, Schematic schematic) {
         World world = loc.getWorld();
         
         List<Entity> entities = schematic.getEntities();
@@ -290,7 +451,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
     }
 
     @SuppressWarnings("deprecation")
-    private ItemStack getItemStack(Item item) {
+    protected ItemStack getItemStack(Item item) {
         ItemStack is = new ItemStack(item.getId(), item.getCount());
         ItemTag itemtag = item.getTag();
 
@@ -302,7 +463,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
     }
 
     @SuppressWarnings("deprecation")
-    private void setTag(ItemStack is, ItemTag itemtag) {
+    protected void setTag(ItemStack is, ItemTag itemtag) {
         List<Ench> enchants = itemtag.getEnchants();
         //Integer repaircost = itemtag.getRepairCost();
         List<String> pages = itemtag.getPages();
@@ -339,7 +500,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
     }
 
     @SuppressWarnings({ "deprecation", "unused" })
-    private org.bukkit.entity.Entity createEntity(Entity e, Location loc, int originX, int originY, int originZ) {
+    protected org.bukkit.entity.Entity createEntity(Entity e, Location loc, int originX, int originY, int originZ) {
         EntityType entitytype = EntityType.fromName(e.getId());
         World world = loc.getWorld();
 
@@ -545,8 +706,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return ent;
     }
     
-    
-    private org.bukkit.entity.Entity getLeash(Leash leash, Location loc, int originX, int originY, int originZ) {
+    protected org.bukkit.entity.Entity getLeash(Leash leash, Location loc, int originX, int originY, int originZ) {
         org.bukkit.entity.Entity ent = null;
         World world = loc.getWorld();
         
@@ -580,7 +740,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return ent;
     }
 
-    private Schematic loadCompiledSchematic(String file, long checksum) {
+    protected Schematic loadCompiledSchematic(String file, long checksum) {
         Schematic schem = null;
         String filename = plugin.getDataFolder().getAbsolutePath() + "\\.Buff\\" + file + ".room";
         File f = new File(filename);
@@ -602,7 +762,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return schem;
     }
     
-    private void saveCompiledSchematic(Schematic schem, String file) {
+    protected void saveCompiledSchematic(Schematic schem, String file) {
         String filename = plugin.getDataFolder().getAbsolutePath() + "\\.Buff\\" + file + ".room";
         
         try (ObjectOutput output = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename)))) {
@@ -613,161 +773,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    public Schematic loadSchematic(File file) throws IOException, IllegalArgumentException {
-        
-        long checksum = Files.hash(file, Hashing.md5()).asLong();
-        
-        Schematic schem = loadCompiledSchematic(file.getName(), checksum);
-
-        if (schem == null) {
-
-            try (NBTInputStream nbtStream = new NBTInputStream(new FileInputStream(file))) {
-
-                CompoundTag schematicTag = (CompoundTag) nbtStream.readTag();
-                if (!schematicTag.getName().equals("Schematic")) {
-                    throw new IllegalArgumentException("Tag \"Schematic\" does not exist or is not first");
-                }
-
-                Map<String, Tag> schematic = schematicTag.getValue();
-                if (!schematic.containsKey("Blocks")) {
-                    throw new IllegalArgumentException("Schematic file is missing a \"Blocks\" tag");
-                }
-
-                short width = getChildTag(schematic, "Width", ShortTag.class, Short.class);
-                short length = getChildTag(schematic, "Length", ShortTag.class, Short.class);
-                short height = getChildTag(schematic, "Height", ShortTag.class, Short.class);
-                String roomauthor = getChildTag(schematic, "RoomAuthor", StringTag.class, String.class);
-                
-                Size size = null;
-                               
-                if (width == 16 * 4 && length == 16 * 4) {
-                    if (height == 8 * 4) {
-                        size = Size.FourXFourXFour;
-                    } else {
-                        size = Size.FourXFourXTwo;
-                    }
-                } else if (width == 16 * 2 && length == 16 * 2) {
-                    size = Size.TwoXTwoXTwo;
-                } else if (width == 16 * 2 || length == 16 * 2) {
-                    size = Size.TwoXTwoXOne;
-                } else {
-                    size = Size.OneXOneXOne;
-                }
-                
-                Integer originx = getChildTag(schematic, "WEOriginX", IntTag.class, Integer.class);
-                Integer originy = getChildTag(schematic, "WEOriginY", IntTag.class, Integer.class);
-                Integer originz = getChildTag(schematic, "WEOriginZ", IntTag.class, Integer.class);
-
-                String materials = getChildTag(schematic, "Materials", StringTag.class, String.class);
-                if (!materials.equals("Alpha")) {
-                    throw new IllegalArgumentException("Schematic file is not an Alpha schematic");
-                }
-
-                byte[] rawblocks = getChildTag(schematic, "Blocks", ByteArrayTag.class, byte[].class);
-                int[] blocks = new int[rawblocks.length];
-                
-                for(int ctr = 0; ctr < rawblocks.length; ctr++) {
-                    int blockid = rawblocks[ctr] & 0xff;
-                    
-                    //if(blockid < 0) blockid = 256 + blockid;
-                    
-                    blocks[ctr] = blockid;
-                }
-                
-                
-                byte[] blockData = getChildTag(schematic, "Data", ByteArrayTag.class, byte[].class);
-                byte[] blockBiomes = getChildTag(schematic, "Biomes", ByteArrayTag.class, byte[].class);
-
-                List<Entity> entities = null;
-                List<TileEntity> tileentities = null;
-
-                // Load Entities
-                List<?> entitiesList = getChildTag(schematic, "Entities", ListTag.class, List.class);
-
-                if (entitiesList != null) {
-                    entities = new ArrayList<Entity>();
-
-                    for (Object tag : entitiesList) {
-                        if (tag instanceof CompoundTag) {                                          
-                            entities.add(getEntity((CompoundTag) tag));
-                        }
-                    }
-                }
-
-                // Load TileEntities
-                List<?> tileentitiesList = getChildTag(schematic, "TileEntities", ListTag.class, List.class);
-
-                if (tileentitiesList != null) {
-                    tileentities = new ArrayList<TileEntity>();
-
-                    for (Object entityElement : tileentitiesList) {
-                        if (entityElement instanceof CompoundTag) {
-                            Map<String, Tag> tileentity = ((CompoundTag) entityElement).getValue();
-
-                            Byte rot = getChildTag(tileentity, "Rot", ByteTag.class, Byte.class);
-                            Byte skulltype = getChildTag(tileentity, "SkullType", ByteTag.class, Byte.class);
-                            Byte note = getChildTag(tileentity, "note", ByteTag.class, Byte.class);
-
-                            Integer x = getChildTag(tileentity, "x", IntTag.class, Integer.class);
-                            Integer y = getChildTag(tileentity, "y", IntTag.class, Integer.class);
-                            Integer z = getChildTag(tileentity, "z", IntTag.class, Integer.class);
-                            Integer record = getChildTag(tileentity, "Record", IntTag.class, Integer.class);
-                            Integer outputsignal = getChildTag(tileentity, "OutputSignal", IntTag.class, Integer.class);
-                            Integer transfercooldown = getChildTag(tileentity, "TransferCooldown", IntTag.class, Integer.class);
-                            Integer levels = getChildTag(tileentity, "Levels", IntTag.class, Integer.class);
-                            Integer primary = getChildTag(tileentity, "Primary", IntTag.class, Integer.class);
-                            Integer secondary = getChildTag(tileentity, "Secondary", IntTag.class, Integer.class);
-
-                            RecordItem recorditem = null;
-
-                            Short delay = getChildTag(tileentity, "Delay", ShortTag.class, Short.class);
-                            Short maxnearbyentities = getChildTag(tileentity, "MaxNearbyEntities", ShortTag.class, Short.class);
-                            Short maxspawndelay = getChildTag(tileentity, "MaxSpawnDelay", ShortTag.class, Short.class);
-                            Short minspawndelay = getChildTag(tileentity, "MinSpawnDelay", ShortTag.class, Short.class);
-                            Short requiredplayerrange = getChildTag(tileentity, "RequiredPlayerRange", ShortTag.class, Short.class);
-                            Short spawncount = getChildTag(tileentity, "SpawnCount", ShortTag.class, Short.class);
-                            Short spawnrange = getChildTag(tileentity, "SpawnRange", ShortTag.class, Short.class);
-                            Short burntime = getChildTag(tileentity, "BurnTime", ShortTag.class, Short.class);
-                            Short cooktime = getChildTag(tileentity, "CookTime", ShortTag.class, Short.class);
-                            Short brewtime = getChildTag(tileentity, "BrewTime", ShortTag.class, Short.class);
-
-                            String entityid = getChildTag(tileentity, "EntityId", StringTag.class, String.class);
-                            String customname = getChildTag(tileentity, "CustomName", StringTag.class, String.class);
-                            String id = getChildTag(tileentity, "id", StringTag.class, String.class);
-                            String text1 = getChildTag(tileentity, "Text1", StringTag.class, String.class);
-                            String text2 = getChildTag(tileentity, "Text2", StringTag.class, String.class);
-                            String text3 = getChildTag(tileentity, "Text3", StringTag.class, String.class);
-                            String text4 = getChildTag(tileentity, "Text4", StringTag.class, String.class);
-                            String command = getChildTag(tileentity, "Command", StringTag.class, String.class);
-
-                            List<Item> items = getItems(tileentity);
-
-                            if (tileentity.containsKey("RecordItem")) {
-                                Map<String, Tag> recorditemtag = getChildTag(tileentity, "RecordItem", CompoundTag.class).getValue();
-                                Byte count = getChildTag(recorditemtag, "Count", ByteTag.class, Byte.class);
-                                Short damage = getChildTag(recorditemtag, "Damage", ShortTag.class, Short.class);
-                                Short recorditemid = getChildTag(recorditemtag, "id", ShortTag.class, Short.class);
-                                recorditem = new RecordItem(count, damage, recorditemid);
-                            }
-
-                            tileentities.add(new TileEntity(x, y, z, customname, id, items, rot, skulltype, delay, maxnearbyentities, 
-                                    maxspawndelay, minspawndelay, requiredplayerrange, spawncount, spawnrange, entityid, burntime, cooktime, 
-                                    text1, text2, text3, text4, note, record, recorditem, brewtime, command, outputsignal,
-                                    transfercooldown, levels, primary, secondary));
-                        }
-                    }
-                }
-
-                schem = new Schematic(blocks, blockData, blockBiomes, materials, width, length, height, entities, tileentities, roomauthor, checksum, originx, originy, originz, size);
-
-                saveCompiledSchematic(schem, file.getName());
-            }
-        }
-        
-        return schem;
-    }
-    
-    private Entity getEntity(CompoundTag tag) {
+    protected Entity getEntity(CompoundTag tag) {
         Map<String, Tag> entity = tag.getValue();
         
         Byte dir = getChildTag(entity, "Dir", ByteTag.class, Byte.class);
@@ -853,10 +859,10 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return new Entity(dir, direction, invulnerable, onground, air, fire, dimension, portalcooldown, tilex, tiley, tilez, falldistance, id, motive, motion, pos, rotation,
                 canpickuploot, color, customnamevisible, leashed, persistencerequired, sheared, attacktime, deathtime, health, hurttime, age, inlove, absorptionamount,
                 healf, customname, attributes, dropchances, equipments, skeletontype, riding, leash, item, isbaby, items, transfercooldown, fuel, pushx, pushz, tntfuse,
-                itemrotation, itemdropchance);
+                itemrotation, itemdropchance, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
     
-    private Leash getLeash(CompoundTag leashelement) {
+    protected Leash getLeash(CompoundTag leashelement) {
         Map<String, Tag> leash = ((CompoundTag) leashelement).getValue();
         Integer x = getChildTag(leash, "X", IntTag.class, Integer.class);
         Integer y = getChildTag(leash, "Y", IntTag.class, Integer.class);
@@ -865,7 +871,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return new Leash(x, y, z);
     }
     
-    private Modifier getModifier(CompoundTag modifierelement) {
+    protected Modifier getModifier(CompoundTag modifierelement) {
         Map<String, Tag> modifier = ((CompoundTag) modifierelement).getValue();
         Integer operation = getChildTag(modifier, "Operation", IntTag.class, Integer.class);
         Double amount = getChildTag(modifier, "Amount", DoubleTag.class, Double.class);
@@ -874,7 +880,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return new Modifier(operation, amount, name);
     }
     
-    private List<Modifier> getModifiers(Map<String, Tag> attribute) {
+    protected List<Modifier> getModifiers(Map<String, Tag> attribute) {
         List<?> modifierlist = getChildTag(attribute, "Modifiers", ListTag.class, List.class);
 
         if (modifierlist != null) {
@@ -892,7 +898,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private Item getItem(CompoundTag itemElement) {
+    protected Item getItem(CompoundTag itemElement) {
         Map<String, Tag> item = itemElement.getValue();
         Byte count = getChildTag(item, "Count", ByteTag.class, Byte.class);
         Byte slot = getChildTag(item, "Slot", ByteTag.class, Byte.class);
@@ -904,7 +910,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return new Item(count, slot, damage, itemid, tag);
     }
     
-    private List<Item> getItems(Map<String, Tag> entity) {
+    protected List<Item> getItems(Map<String, Tag> entity) {
         List<?> itemsList = getChildTag(entity, "Items", ListTag.class, List.class);
 
         if (itemsList != null) {
@@ -922,7 +928,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private ItemTag getItemTag(Map<String, Tag> item) {
+    protected ItemTag getItemTag(Map<String, Tag> item) {
         CompoundTag itemtagElement = getChildTag(item, "tag", CompoundTag.class);
 
         if (itemtagElement != null) {
@@ -940,7 +946,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private Display getDisplay(Map<String, Tag> itemtag) {
+    protected Display getDisplay(Map<String, Tag> itemtag) {
         CompoundTag displayElement = getChildTag(itemtag, "display", CompoundTag.class);
 
         if (displayElement != null) {
@@ -954,14 +960,14 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private Ench getEnchant(CompoundTag enchantelement) {
+    protected Ench getEnchant(CompoundTag enchantelement) {
         Map<String, Tag> enchant = enchantelement.getValue();
         Short id = getChildTag(enchant, "id", ShortTag.class, Short.class);
         Short lvl = getChildTag(enchant, "lvl", ShortTag.class, Short.class);
         return new Ench(id, lvl);
     }
     
-    private List<Ench> getEnchant(Map<String, Tag> enchanttag) {
+    protected List<Ench> getEnchant(Map<String, Tag> enchanttag) {
         List<?> enchantList = getChildTag(enchanttag, "ench", ListTag.class, List.class);
 
         if (enchantList != null) {
@@ -979,7 +985,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private Equipment getEquipment(CompoundTag equipmentelement) {
+    protected Equipment getEquipment(CompoundTag equipmentelement) {
         Map<String, Tag> equipment = equipmentelement.getValue();
         Byte count = getChildTag(equipment, "Count", ByteTag.class, Byte.class);
         Short damage = getChildTag(equipment, "Damage", ShortTag.class, Short.class);
@@ -990,7 +996,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return new Equipment(count, damage, id, itemtag);
     }
     
-    private List<Equipment> getEquipment(Map<String, Tag> entity) {
+    protected List<Equipment> getEquipment(Map<String, Tag> entity) {
         List<?> equipmentlist = getChildTag(entity, "Equipment", ListTag.class, List.class);
 
         if (equipmentlist != null) {
@@ -1008,7 +1014,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         }
     }
     
-    private Attribute getAttribute(CompoundTag attributeelement) {
+    protected Attribute getAttribute(CompoundTag attributeelement) {
         Map<String, Tag> attribute = attributeelement.getValue();
         Double base = getChildTag(attribute, "Base", DoubleTag.class, Double.class);
         String name = getChildTag(attribute, "Name", StringTag.class, String.class);
@@ -1016,7 +1022,7 @@ public class SchematicUtil extends AbstractSchematicUtil {
         return new Attribute(base, name, modifiers);
     }
 
-    private List<Attribute> getAttributes(Map<String, Tag> entity) {
+    protected List<Attribute> getAttributes(Map<String, Tag> entity) {
         List<?> attributelist = getChildTag(entity, "Attributes", ListTag.class, List.class);
 
         if (attributelist != null) {

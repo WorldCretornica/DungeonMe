@@ -1,9 +1,6 @@
-package com.worldcretornica.dungeonme.schematic.v1_8;
+package com.worldcretornica.dungeonme.schematic;
 
 import java.util.List;
-
-import com.worldcretornica.dungeonme.schematic.AbstractSchematicElement;
-import com.worldcretornica.dungeonme.schematic.Size;
 
 public class Schematic extends AbstractSchematicElement {
  

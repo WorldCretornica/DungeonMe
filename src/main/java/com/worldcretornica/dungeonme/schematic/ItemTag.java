@@ -1,8 +1,6 @@
-package com.worldcretornica.dungeonme.schematic.v1_8;
+package com.worldcretornica.dungeonme.schematic;
 
 import java.util.List;
-
-import com.worldcretornica.dungeonme.schematic.AbstractSchematicElement;
 
 public class ItemTag extends AbstractSchematicElement {
 
